@@ -3,5 +3,6 @@
 
 work/
 build/
+.idea/
 .vscode/
 excutable/
