@@ -111,7 +111,16 @@ void test_int2float(){
     printf("int %ld to float64 %.2Lf to int %ld\n", a, d, e);
 }
 
+/* Because the round behavior */ 
+/* the calculation between big float and small float may underflow */
+void test_float_calculation(){
+    float x = 3.14, y = 1e10;
+    printf("(%.2f + %.2f) - %.2f = %.2f\n", x, y, y, (x + y) - y);
+    printf("%.2f - %.2f + %.2f = %.2f\n", y, y, x, y - y + x);
+}
+
 
 void main(){
-    test_int2float();
+    test_float_calculation();
+
 }

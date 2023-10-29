@@ -1,5 +1,5 @@
 #include<stdio.h>
-
+#include<limits.h>
 
 typedef unsigned char *byte_pointer;
 
@@ -23,21 +23,39 @@ void show_bytes(byte_pointer start, size_t len){
     printf("\n");
 }
 
-/* the transform order is important*/
+/* use byte_pointer to check byte order */
+int is_little_endian(){
+    int x = INT_MIN; /* INT_MIN declared in limits.h */
+    byte_pointer p = (byte_pointer) &x;
+    return !(*p);
+}
+
+/* use bit calculation to check */ 
+/* whether machine use the arithmetic shift right */
+int is_arithmetic_shift(){
+    int x = -1; /* is all 1 */
+    /* if arithmetic, x >> 1 is also all 1 */
+    return !~(x >> 1);
+}
+
+/* the transform order is important */
 void multitrans(){
     short ax = -12345;
-    unsigned uy = ax; 
+    unsigned uy = ax;
+    printf("short -> unsigned: ");
     show_bytes((byte_pointer) &ax, 2);
     show_bytes((byte_pointer) &uy, 4);
     printf("%u\n", uy);
 
     int n = ax;
     unsigned y = n;
+    printf("short -> int -> unsigned: ");
     show_bytes((byte_pointer) &n, 4);
     show_bytes((byte_pointer) &y, 4);
     
     unsigned short us = ax;
     unsigned uu = us;
+    printf("short -> unsigned short -> unsigned: ");
     show_bytes((byte_pointer) &us, 4);
     show_bytes((byte_pointer) &uu, 4);
 }
@@ -69,7 +87,7 @@ void test_div_2expk(){
 #define POS_INFINITY 1e400 /* 1e400 positive overflow in float32 and float64 */
 #define NEG_INFINITY -POS_INFINITY
 #define NEG_ZERO (-1.0 / POS_INFINITY)
-void test_inifinity(){
+void test_infinity(){
     double pinf = POS_INFINITY, ninf = NEG_INFINITY, nzero = NEG_ZERO;
     printf("The positive infinity: %f, bytes: ",pinf);
     show_bytes((byte_pointer) &pinf, sizeof(double));
@@ -80,5 +98,18 @@ void test_inifinity(){
 }
 
 void main(){
-    test_inifinity();
+    if(is_little_endian()){
+        printf("This is a little endian machine\n\n");
+    }
+    else{
+        printf("This is a big endian machine\n\n");
+    }
+    if(is_arithmetic_shift()){
+        printf("This machine is with arithmetic shift\n\n");
+    }
+    else{
+        printf("This machine is with logic shift\n\n");
+    }
+
+    test_infinity();
 }
