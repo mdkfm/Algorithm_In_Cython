@@ -97,6 +97,19 @@ void test_infinity(){
     show_bytes((byte_pointer) &nzero, sizeof(double));
 }
 
+/* check the num of ones whehter */
+int odd_ones(unsigned x){
+    unsigned y = x;
+    y = (y >> 16) ^ y;
+    y = (y >> 8) ^ y;
+    y = (y >> 4) ^ y;
+    y = (y >> 2) ^ y;
+    y = (y >> 1) ^ y;
+    y = y & 0x01;
+    return y;
+}
+
+
 void main(){
     if(is_little_endian()){
         printf("This is a little endian machine\n\n");
@@ -111,5 +124,7 @@ void main(){
         printf("This machine is with logic shift\n\n");
     }
 
+    unsigned x = 0x1111117F;
+    printf("%d\n", odd_ones(x));
     test_infinity();
 }
