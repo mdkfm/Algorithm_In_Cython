@@ -2,17 +2,17 @@
 #include<malloc.h>
 #include<stdlib.h>
 
-// void exit(int status);
-
 /* gcc LinkList.c -fPIC -shared -o libLinkList.so */
 
+typedef int Elemtype;
+
 typedef struct LNode{
-    int data;
+    Elemtype data;
     struct LNode *next;
-}LinkNode;
+} LinkNode;
 
 
-LinkNode * CreateList(int * list, int length, int reversed){
+LinkNode * createFromArray(Elemtype * list, int length, int reversed){
     // construct a LinkList, based on list
     // length the read length of list
     // reversed: 0 origin, 1 reversed
@@ -41,14 +41,14 @@ LinkNode * CreateList(int * list, int length, int reversed){
 }
 
 
-LinkNode * InitList(){
+LinkNode * newList(){
     LinkNode *L;
     L = (LinkNode *) malloc(sizeof(LinkNode));
     L->next = NULL;
     return L;
 }
 
-void DestroyList(LinkNode *L){
+void destroyList(LinkNode *L){
     LinkNode *p = L->next;
     while(p != NULL){
         L->next = p->next;
@@ -58,11 +58,11 @@ void DestroyList(LinkNode *L){
     free(L);
 }
 
-int IsEmpty(LinkNode *L){
+int isEmpty(LinkNode *L){
     return (L->next == NULL);
 }
 
-int GetLength(LinkNode *L){
+int getLength(LinkNode *L){
     int length = 0;
     LinkNode *p = L;
     while (p->next != NULL){
@@ -72,13 +72,16 @@ int GetLength(LinkNode *L){
     return length;
 }
 
-int * ToArray(LinkNode * L, int *length){
+int * toArray(LinkNode * L, int length){
     /* length: output the length */
     LinkNode *p = L->next;
     int i = 0;
     int *list;
-    list = (int *)malloc(*length * sizeof(int));
-    *length = GetLength(L);
+    int max_length;
+    if(length > (max_length = getLength(L))){
+        lenght = max_length;
+    }
+    list = (int *)malloc(length * sizeof(int));
     while(p != NULL){
         list[i] = p->data;
         p = p->next;
@@ -87,47 +90,40 @@ int * ToArray(LinkNode * L, int *length){
     return list;
 }
 
-void DisplayList(LinkNode *L){
+void displayList(LinkNode *L){
     LinkNode *p = L->next;
     printf("Head");
     while(p != NULL){
+        /* where %d is only used for int */
         printf(" -> %d", p->data);
         p = p->next;
     }
     printf("\n");
 }
 
-LinkNode * GetNode(LinkNode *L, int index){
+LinkNode * getNode(LinkNode *L, int index){
     /* The index begins from 0 */
     int j = 0;
     LinkNode *p = L;
     if (index < 0){
-        printf("IndexError: The index must >= 0, but the passed value is %d \n", index);
-        exit(1);
+        return NULL;
     }
     while (j < index && p != NULL){
         j++;
         p = p->next;
     }
-    if (p == NULL){
-        printf("IndexError: The index exceeds the linked list. ");
-        printf("The length of list is %d, but the index is %d. \n", j, index);
-        exit(1);
-    }
-    else{
-        return p;
-    }
+    return p;
 }
 
-int GetElement(LinkNode *L, int index){
-    if(index == 0){
-        printf("IndexError: The head node has not data. \n");
-        exit(1);
+Elemtype getElement(LinkNode *L, int index){
+    LinkNode *node = getNode(L, index);
+    if(node == NULL){
+       return NULL;
     }
-    return (GetNode(L, index)->data);
+    return node->data;
 }
 
-int SearchELement(LinkNode *L, int element){
+int searchELement(LinkNode *L, Elemtype element){
     int index = 1;
     LinkNode *p = L->next;
     while( p != NULL && p->data != element){
@@ -135,17 +131,14 @@ int SearchELement(LinkNode *L, int element){
         index ++;
     }
     if(p->next == NULL){
-        printf("SearchError: The element is not in list. \n");
-        exit(1);
+        return NULL;
     }
-    else{
-        return index;
-    }
+    return index;
 }
 
-int Delete_or_Insert(LinkNode *L, int element){
+void delete_or_Insert(LinkNode *L, Elemtype element){
     int index = 1;
-    LinkNode *p = L->next;
+    LinkNode *p = L->next, *target;
     while( p != NULL && p->data != element){
         p = p->next;
         index ++;
@@ -156,66 +149,49 @@ int Delete_or_Insert(LinkNode *L, int element){
         printf("Not searched and inserted!");
     }
     else{
-        p->next = p->next->next;
+        /* free*/
+        target = p->next;
+        p->next = target->next;
+        /* after deleted from List, we should free it */
+        free(target);
         printf("Searched and deleted");
     }
 }
 
-void DeleteAll(LinkNode *L, int element){
-    LinkNode *p = L;
+void deleteAll(LinkNode *L, Elemtype element){
+    LinkNode *p = L, *target;
     while(p != NULL){
         while(p->next != NULL && p->next->data == element){
-            p->next = p->next->next;
+            target = p->next
+            p->next = target->next;
+            free(target);
         }
         p = p->next;
     }
 }
 
-void Insert(LinkNode *L, int index, int element){
+void insert(LinkNode *L, int index, Elemtype element){
     /* The index begins from 1 */
     LinkNode *p, *s;
-    p = GetNode(L, index - 1);
+    p = getNode(L, index - 1);
     s = (LinkNode *) malloc(sizeof(LinkNode));
     s->data = element;
     s->next = p->next;
     p->next = s;
 }
 
-int ListPop(LinkNode *L, int index){
+Elemtype pop(LinkNode *L, int index){
     int output;
     LinkNode *p;
-    p = GetNode(L, index - 1);
-    if(p->next == NULL){
-        printf("IndexError: The index exceeds the linked list. \n");
-        exit(1);
+    p = getNode(L, index - 1);
+    if(p == NULL || p->next == NULL){
+        return NULL;
     }
-    else{
-        output = p->next->data;
-        p->next = p->next->next;
-        return output;
-    }
+    output = p->next->data;
+    p->next = p->next->next;
+    return output;
 }
 
-int * CharToInt(char * s, int length){
-    int * list;
-    int i;
-    list = (int *)malloc((length + 10) * sizeof(int));
-    for(i = 0; i < length; i++){
-        list[i] = s[i];
-    }
-    return list;
-}
-
-char * IntToChar(int *list, int length){
-    char * s;
-    int i;
-    s = (char *)malloc((length + 10) * sizeof(char));
-    for(i = 0; i < length; i++){
-        s[i] = list[i];
-    }
-    s[length] = '\0';
-    return s;
-}
 
 // int main(){
 //     int a[10] = {0, 1, 2, 3, 4, 5, 5, 7, 8, 5}, length;
