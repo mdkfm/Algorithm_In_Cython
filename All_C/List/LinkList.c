@@ -187,8 +187,11 @@ Elemtype pop(LinkNode *L, int index){
     if(p == NULL || p->next == NULL){
         return NULL;
     }
-    output = p->next->data;
-    p->next = p->next->next;
+    
+    target = p->next
+    output = target->data;
+    p->next = target->next;
+    free(target);
     return output;
 }
 
