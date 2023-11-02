@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "LinkList.h"
 
-/* gcc calculator.c -o calculator -L./ -lLinkList */
+/* gcc All_C/List/calculator.c -o excutabcalculator -L./lib -lLinkList */
 
 
 int hash(char cal){
@@ -95,78 +95,64 @@ int reader(char *cal, int *index, int *is_num){
     return op;
 }
 
-int insert(int element, int is_num, LinkNode *operator, LinkNode *operand){
+int insert_stack(int element, int is_num, LinkNode *operator, LinkNode *operand){
     int last_element, pri, op, op1, op2, result;
     // DisplayList(operator);
     // DisplayList(operand);
     if(is_num){
-        Insert(operand, 1, element);
+        insert(operand, 1, element);
         // printf("num: %d\n", element);
     }
     else{
         // printf("op: %c\n", element);
 
-        last_element = GetElement(operator, 1);
+        last_element = getElement(operator, 1);
         pri = priority(last_element, element);
         // printf("%d\n", pri);
-        while(pri == 1 && !IsEmpty(operator) && !IsEmpty(operand)){
-            op = ListPop(operator, 1);
-            op2 = ListPop(operand, 1);
-            op1 = ListPop(operand, 1);
+        while(pri == 1 && !isEmpty(operator) && !isEmpty(operand)){
+            op = pop(operator, 1);
+            op2 = pop(operand, 1);
+            op1 = pop(operand, 1);
             result = operate(op, op1, op2);
-            Insert(operand, 1, result);
-            last_element = GetElement(operator, 1);
+            insert(operand, 1, result);
+            last_element = getElement(operator, 1);
             pri = priority(last_element, element);
         }
 
         if(pri == -1){
-            Insert(operator, 1, element);
+            insert(operator, 1, element);
         }
         else if(pri == 0){
-            ListPop(operator, 1);
+            pop(operator, 1);
         }
     }
-}
-
-char * delete_blank(char *cal, int *length){
-    int * list;
-    LinkNode * L;
-
-    list = CharToInt(cal, *length);
-    L = CreateList(list, *length, 0);
-    DeleteAll(L, ' ');
-    list = ToArray(L, length);
-    cal = IntToChar(list, *length);
-    return cal;
 }
 
 int calculator(char *cal, int length){
     LinkNode *operand, *operator;
     int is_num = 0, index = 0, element;
 
-    cal = delete_blank(cal, &length);
-
     cal[length] = '#';
     cal[length + 1] = '\0';
 
     operand = (LinkNode *) malloc(sizeof(LinkNode));
     operator = (LinkNode *) malloc(sizeof(LinkNode));
-    Insert(operator, 1, '#');
+    insert(operator, 1, '#');
     
     while(cal[index] != '\0'){
         // printf("%d\n", index);
         element = reader(cal, &index, &is_num);
-        insert(element, is_num, operator, operand);
+        insert_stack(element, is_num, operator, operand);
     }
     // DisplayList(operator);
     // DisplayList(operand);
-    return GetElement(operand, 1);
+    return getElement(operand, 1);
 
 }
 
 
 int main(){
-    char c[100] = {"12 + 12 9.0 + (20 - 12) * 5 / 2"};
+    char c[100] = {"12+129+20-12)*5/2"};
     int result;
     result = calculator(c, strlen(c));
     printf("%d\n", result);
