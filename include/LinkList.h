@@ -1,40 +1,34 @@
-#include<stdio.h>
-#include<malloc.h>
-#include<stdlib.h>
-
-// void exit(int status);
+typedef long int Elemtype;
 
 typedef struct LNode{
-    int data;
+    Elemtype data;
     struct LNode *next;
-}LinkNode;
+} LinkNode;
 
-LinkNode * CreateList(int * list, int length, int reversed);
+LinkNode * createFromArray(Elemtype * list, int length, int reversed);
 
-LinkNode * InitList();
+LinkNode * newList();
 
-void DestroyList(LinkNode *L);
+void destroyList(LinkNode *L);
 
-int IsEmpty(LinkNode *L);
+int isEmpty(LinkNode *L);
 
-int GetLength(LinkNode *L);
+int getLength(LinkNode *L);
 
-int * ToArray(LinkNode *L, int *length);
+Elemtype * toArray(LinkNode * L, int length);
 
-void DisplayList(LinkNode *L);
+void displayList(LinkNode *L);
 
-LinkNode * GetNode(LinkNode *L, int index);
+LinkNode * getNode(LinkNode *L, int index);
 
-int GetElement(LinkNode *L, int index);
+Elemtype getElement(LinkNode *L, int index);
 
-int SearchELement(LinkNode *L, int element);
+int searchELement(LinkNode *L, Elemtype element);
 
-void DeleteAll(LinkNode *L, int element);
+void delete_or_Insert(LinkNode *L, Elemtype element);
 
-void Insert(LinkNode *L, int index, int element);
+void deleteAll(LinkNode *L, Elemtype element);
 
-int ListPop(LinkNode *L, int index);
+void insert(LinkNode *L, int index, Elemtype element);
 
-int * CharToInt(char * s, int length);
-
-char * IntToChar(int *list, int length);
+Elemtype pop(LinkNode *L, int index);

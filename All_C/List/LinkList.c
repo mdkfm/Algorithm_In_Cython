@@ -4,7 +4,7 @@
 
 /* gcc LinkList.c -fPIC -shared -o libLinkList.so */
 
-typedef int Elemtype;
+typedef long int Elemtype;
 
 typedef struct LNode{
     Elemtype data;
@@ -72,16 +72,16 @@ int getLength(LinkNode *L){
     return length;
 }
 
-int * toArray(LinkNode * L, int length){
+Elemtype * toArray(LinkNode * L, int length){
     /* length: output the length */
     LinkNode *p = L->next;
     int i = 0;
-    int *list;
+    Elemtype *list;
     int max_length;
     if(length > (max_length = getLength(L))){
-        lenght = max_length;
+        length = max_length;
     }
-    list = (int *)malloc(length * sizeof(int));
+    list = (Elemtype*)malloc(length * sizeof(Elemtype));
     while(p != NULL){
         list[i] = p->data;
         p = p->next;
@@ -95,7 +95,7 @@ void displayList(LinkNode *L){
     printf("Head");
     while(p != NULL){
         /* where %d is only used for int */
-        printf(" -> %d", p->data);
+        printf(" -> %ld", p->data);
         p = p->next;
     }
     printf("\n");
@@ -162,7 +162,7 @@ void deleteAll(LinkNode *L, Elemtype element){
     LinkNode *p = L, *target;
     while(p != NULL){
         while(p->next != NULL && p->next->data == element){
-            target = p->next
+            target = p->next;
             p->next = target->next;
             free(target);
         }
@@ -182,13 +182,13 @@ void insert(LinkNode *L, int index, Elemtype element){
 
 Elemtype pop(LinkNode *L, int index){
     int output;
-    LinkNode *p;
+    LinkNode *p, *target;
     p = getNode(L, index - 1);
     if(p == NULL || p->next == NULL){
         return NULL;
     }
     
-    target = p->next
+    target = p->next;
     output = target->data;
     p->next = target->next;
     free(target);
