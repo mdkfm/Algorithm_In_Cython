@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "LinkList.h"
 
-/* gcc All_C/List/calculator.c -o excutabcalculator -L./lib -lLinkList */
+/* gcc All_C/List/calculator.c -o excutable/calculator -L./lib -lLinkList */
 
 
 int hash(char cal){

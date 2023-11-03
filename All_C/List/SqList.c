@@ -2,8 +2,6 @@
 #include<malloc.h>
 #include<stdlib.h>
 
-void exit(int status);
-
 typedef struct {
     int * data;
     int length;

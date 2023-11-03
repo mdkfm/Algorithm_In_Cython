@@ -2,7 +2,7 @@
 #include<malloc.h>
 #include<stdlib.h>
 
-/* gcc LinkList.c -fPIC -shared -o libLinkList.so */
+/* gcc ./All_C/List/LinkList.c -fPIC -shared -o ./lib/libLinkList.so */
 
 typedef long int Elemtype;
 

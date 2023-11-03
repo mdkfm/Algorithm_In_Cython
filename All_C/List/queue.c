@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<malloc.h>
 
-/* gcc LinkList.c -fPIC -shared -o libLinkList.so */
+/* gcc ./All_C/List/queue.c -fPIC -shared -o ./lib/libqueue.so */
 
 typedef long int QElem;
 
@@ -40,7 +40,8 @@ int appendLeft(Queue *q, QElem elem){
         // append fail
         return NULL;
     }
-    q->data[--q->front] = elem;
+    q->front = (q->front - 1) % q->maxsize;
+    q->data[q->front] = elem;
     return 1;
 }
 
@@ -49,7 +50,9 @@ int appendRight(Queue *q, QElem elem){
         // append fail
         return NULL;
     }
-    q->data[q->rear++] = elem;
+    
+    q->data[q->rear] = elem;
+    q->rear = (q->rear + 1) % q->maxsize;
     return 1;
 }
 
@@ -58,7 +61,9 @@ QElem popLeft(Queue *q){
         // pop fail
         return NULL;
     }
-    return q->data[q->front++];
+    long output = q->data[q->front];
+    q->front = (q->front + 1) % q->maxsize;
+    return output;
 }
 
 QElem popRight(Queue *q){
@@ -66,7 +71,30 @@ QElem popRight(Queue *q){
         // pop fail
         return NULL;
     }
-    return q->data[--q->rear];
+    q->rear = (q->rear - 1) % q->maxsize;
+    return q->data[q->rear];
+}
+
+QElem getLeft(Queue *q, int index){
+    // get elem from left 
+    // index from 0 to (q->rear - q->front -1) % q->maxsize
+    int get_index = (q->front + index) % q->maxsize;
+    if(index < 0 || get_index >= q->rear){
+        // get fail
+        return NULL;
+    }
+    return q->data[get_index];
+}
+
+QElem getRight(Queue *q, int index){
+    // get elem from right
+    // index from 0 to (q->rear - q->front -1) % q->maxsize
+    int get_index = (q->rear - index - 1) % q->maxsize;
+    if(index < 0 || get_index < q->front){
+        //get fail
+        return NULL;
+    }
+    return q->data[get_index];
 }
 
 void displayQueue(Queue *q){
