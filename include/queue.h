@@ -22,6 +22,8 @@ QElem popLeft(Queue *q);
 
 QElem popRight(Queue *q);
 
-void displayQueue(Queue *q);
+QElem getLeft(Queue *q, int index);
 
-void destoryQueue(Queue *q);
+QElem getRight(Queue *q, int index);
+
+void displayQueue(Queue *q);
