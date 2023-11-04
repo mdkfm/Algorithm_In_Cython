@@ -17,11 +17,12 @@ LinkNode * createFromArray(Elemtype * list, int length, int reversed){
     // length the read length of list
     // reversed: 0 origin, 1 reversed
     LinkNode *L, *s; // L the head node, s tmp node
+    int i;
     L = (LinkNode *) malloc(sizeof(LinkNode));
     L->next = NULL;
     
     if(reversed){
-        for (int i = 0; i < length; i ++){
+        for (i = 0; i < length; i ++){
                 s = (LinkNode *) malloc(sizeof(LinkNode));
                 s->data = list[i];
                 s->next = L->next;
@@ -29,7 +30,7 @@ LinkNode * createFromArray(Elemtype * list, int length, int reversed){
             }
     }
     else{
-        for (int i = length - 1; i >= 0; i --){
+        for (i = length - 1; i >= 0; i --){
                 s = (LinkNode *) malloc(sizeof(LinkNode));
                 s->data = list[i];
                 s->next = L->next;
@@ -41,11 +42,15 @@ LinkNode * createFromArray(Elemtype * list, int length, int reversed){
 }
 
 
-LinkNode * newList(){
+LinkNode * newListNode(){
     LinkNode *L;
     L = (LinkNode *) malloc(sizeof(LinkNode));
     L->next = NULL;
     return L;
+}
+
+void * deleteListNode(LinkNode *L){
+    free(L);
 }
 
 void destroyList(LinkNode *L){
@@ -94,7 +99,7 @@ void displayList(LinkNode *L){
     LinkNode *p = L->next;
     printf("Head");
     while(p != NULL){
-        /* where %d is only used for int */
+        /* where %ld is only used for int */
         printf(" -> %ld", p->data);
         p = p->next;
     }
@@ -118,7 +123,7 @@ LinkNode * getNode(LinkNode *L, int index){
 Elemtype getElement(LinkNode *L, int index){
     LinkNode *node = getNode(L, index);
     if(node == NULL){
-       return NULL;
+       return 0;
     }
     return node->data;
 }
@@ -131,30 +136,29 @@ int searchELement(LinkNode *L, Elemtype element){
         index ++;
     }
     if(p->next == NULL){
-        return NULL;
+        return 0;
     }
     return index;
 }
 
 void delete_or_Insert(LinkNode *L, Elemtype element){
-    int index = 1;
-    LinkNode *p = L->next, *target;
-    while( p != NULL && p->data != element){
+
+    LinkNode *p = L, *target;
+    while( p->next != NULL && p->next->data != element){
         p = p->next;
-        index ++;
     }
     if(p->next == NULL){
         p->next = (LinkNode *)malloc(sizeof(LinkNode));
         p->next->data = element;
-        printf("Not searched and inserted!");
+        p->next->next = NULL;
+        printf("Not searched and inserted!\n");
     }
     else{
-        /* free*/
         target = p->next;
         p->next = target->next;
         /* after deleted from List, we should free it */
         free(target);
-        printf("Searched and deleted");
+        printf("Searched and deleted\n");
     }
 }
 
@@ -185,7 +189,7 @@ Elemtype pop(LinkNode *L, int index){
     LinkNode *p, *target;
     p = getNode(L, index - 1);
     if(p == NULL || p->next == NULL){
-        return NULL;
+        return 0;
     }
     
     target = p->next;
@@ -195,16 +199,11 @@ Elemtype pop(LinkNode *L, int index){
     return output;
 }
 
-
 // int main(){
-//     int a[10] = {0, 1, 2, 3, 4, 5, 5, 7, 8, 5}, length;
-//     int *b;
-//     LinkNode *L, *L2;
-//     L = CreateList(a, 10, 0);
-//     DisplayList(L);
-//     b = ToArray(L, &length);
-//     DestroyList(L);
-//     L2 = CreateList(b, 10, 0);
-//     DeleteAll(L2, 5);
-//     DisplayList(L2);
+//     Elemtype a[10] = {0, 1, 2, 3, 4, 5, 5, 5, 7, 8};
+//     LinkNode *L;
+//     L = createFromArray(a, 10, 0);
+//     delete_or_Insert(L, 8);
+//     delete_or_Insert(L, 10);
+//     displayList(L);
 // }
