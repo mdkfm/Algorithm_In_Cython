@@ -34,8 +34,6 @@ typedef struct Tree{
 } Tree;
 
 
-// void insertLeft(Queue *queue, QE)
-
 treeNode *newNode(){
     /* use newNode to create a empty node */
     treeNode *node;
