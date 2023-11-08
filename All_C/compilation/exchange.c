@@ -1,6 +1,6 @@
 /* gcc -Og -S exchange.c, get the compilation */
 
-/* gcc -Og -o exchange -c mstore.c */
+/* gcc -Og -o exchange -c exchange.c */
 /* objdump -d exchange, disassembly */
 #include<stdio.h>
 long exchange(long *xp, long y){
