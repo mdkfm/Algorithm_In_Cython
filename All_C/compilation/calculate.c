@@ -16,3 +16,16 @@ long arith(long x, long y, long z){
     long t4 = t2 - t3; /* subq %rdi, %rax */
     return t4;
 }
+
+
+double float_cal(double x, double y, double z){
+    // float will use XMM register
+    // x in %xmm0, y in %xmm1, z in %xmm2,
+    double result;
+    // mulsd %xmm1, %xmm0
+    // divsd %xmm2, %xmm0
+    result = x * y / z;
+
+    // return value in %xmm0
+    return result;
+}

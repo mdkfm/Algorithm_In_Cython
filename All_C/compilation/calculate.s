@@ -28,6 +28,18 @@ arith:
 	.cfi_endproc
 .LFE1:
 	.size	arith, .-arith
+	.globl	float_cal
+	.type	float_cal, @function
+float_cal:
+.LFB2:
+	.cfi_startproc
+	endbr64
+	mulsd	%xmm1, %xmm0
+	divsd	%xmm2, %xmm0
+	ret
+	.cfi_endproc
+.LFE2:
+	.size	float_cal, .-float_cal
 	.ident	"GCC: (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0"
 	.section	.note.GNU-stack,"",@progbits
 	.section	.note.gnu.property,"a"
