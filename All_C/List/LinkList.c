@@ -199,11 +199,119 @@ Elemtype pop(LinkNode *L, int index){
     return output;
 }
 
+
+LinkNode* mergeOrder(LinkNode *L1, LinkNode *L2){
+    LinkNode *p1 = L1->next;
+    LinkNode *p2 = L2->next;
+    LinkNode *mergedList = newListNode();
+    LinkNode *p = mergedList;
+    
+    while(p1 != NULL && p2 != NULL){
+        if(p1->data <= p2->data){
+            p->next = p1;
+            p1 = p1->next;
+        }
+        else{
+            p->next = p2;
+            p2 = p2->next;
+        }
+        p = p->next;
+    }
+    
+    if(p1 != NULL){
+        p->next = p1;
+    }
+    else{
+        p->next = p2;
+    }
+    
+    return mergedList;
+}
+
+LinkNode* deleteLastN(LinkNode *L, int n){
+    LinkNode *p = L;
+    LinkNode *q = L;
+    int count = 0;
+    
+    while(count < n && q->next != NULL){
+        q = q->next;
+        count++;
+    }
+    
+    if(count < n){
+        return L;
+    }
+    
+    while(q->next != NULL){
+        p = p->next;
+        q = q->next;
+    }
+    
+    LinkNode *temp = p->next;
+    p->next = p->next->next;
+    deleteListNode(temp);
+    return L;
+}
+
+LinkNode* _reversedK(LinkNode *L, int k){
+    LinkNode *current = L;
+    LinkNode *end = getNode(L, k-1);
+    if(end == NULL){
+        return L;
+    }
+    LinkNode *prev = NULL;
+    LinkNode *next = NULL;
+    int count = 0;
+        
+    // Reverse the next k nodes excluding L
+    while(current != NULL && count < k){
+        next = current->next;
+        current->next = prev;
+        prev = current;
+        current = next;
+        count++;
+    }
+        
+    // Connect the reversed part with the remaining list
+    if(next != NULL){
+        L->next = _reversedK(next, k);
+    }
+        
+    // Return the new head of the reversed list
+    return prev;
+}
+
+void reversedK(LinkNode *L, int k){
+    // reverse k nodes by k nodes
+    L->next = _reversedK(L->next, k);
+}
+
 // int main(){
-//     Elemtype a[10] = {0, 1, 2, 3, 4, 5, 5, 5, 7, 8};
-//     LinkNode *L;
-//     L = createFromArray(a, 10, 0);
-//     delete_or_Insert(L, 8);
-//     delete_or_Insert(L, 10);
-//     displayList(L);
+//     Elemtype a[12] = {0, 1, 2, 3, 4, 5, 5, 5, 7, 8, 9, 11};
+//     LinkNode *L1;
+//     L1 = createFromArray(a, 12, 0);
+//     printf("L1: ");
+//     displayList(L1);
+
+//     Elemtype b[8] = {3, 4, 6, 7, 8, 10, 11, 45};
+//     LinkNode *L2;
+//     L2 = createFromArray(b, 8, 0);
+//     printf("L2: ");
+//     displayList(L2);
+
+//     LinkNode *merged = mergeOrder(L1, L2);
+//     printf("Merged: ");
+//     displayList(merged);
+
+//     reversedK(L1, 4);
+//     printf("Reversed L1: ");
+//     displayList(L1);
+
+//     deleteLastN(L1, 4);
+//     printf("Deleted last 4th node: \n");
+//     displayList(L1);
+
+//     deleteLastN(L1, 33);
+//     printf("Deleted last 33th node: \n");
+//     displayList(L1);
 // }
