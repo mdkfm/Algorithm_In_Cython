@@ -286,32 +286,32 @@ void reversedK(LinkNode *L, int k){
     L->next = _reversedK(L->next, k);
 }
 
-// int main(){
-//     Elemtype a[12] = {0, 1, 2, 3, 4, 5, 5, 5, 7, 8, 9, 11};
-//     LinkNode *L1;
-//     L1 = createFromArray(a, 12, 0);
-//     printf("L1: ");
-//     displayList(L1);
+ int main(){
+     Elemtype a[12] = {0, 1, 2, 3, 4, 5, 5, 5, 7, 8, 9, 11};
+     LinkNode *L1;
+     L1 = createFromArray(a, 12, 0);
+     printf("L1: ");
+     displayList(L1);
 
-//     Elemtype b[8] = {3, 4, 6, 7, 8, 10, 11, 45};
-//     LinkNode *L2;
-//     L2 = createFromArray(b, 8, 0);
-//     printf("L2: ");
-//     displayList(L2);
+     Elemtype b[8] = {3, 4, 6, 7, 8, 10, 11, 45};
+     LinkNode *L2;
+     L2 = createFromArray(b, 8, 0);
+     printf("L2: ");
+     displayList(L2);
 
-//     LinkNode *merged = mergeOrder(L1, L2);
-//     printf("Merged: ");
-//     displayList(merged);
+     LinkNode *merged = mergeOrder(L1, L2);
+     printf("Merged: ");
+     displayList(merged);
 
-//     reversedK(L1, 4);
-//     printf("Reversed L1: ");
-//     displayList(L1);
+     reversedK(L1, 4);
+     printf("Reversed L1: ");
+     displayList(L1);
 
-//     deleteLastN(L1, 4);
-//     printf("Deleted last 4th node: \n");
-//     displayList(L1);
+     deleteLastN(L1, 4);
+     printf("Deleted last 4th node: \n");
+     displayList(L1);
 
-//     deleteLastN(L1, 33);
-//     printf("Deleted last 33th node: \n");
-//     displayList(L1);
-// }
+     deleteLastN(L1, 33);
+     printf("Deleted last 33th node: \n");
+     displayList(L1);
+ }

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "queue.h"
 
+/* TODO: queue.c changed, refactor tree to fit it */
+
 // gcc All_C/Tree/tree.c -o excutable/tree -L./lib -lqueue
 
 typedef long int Elemtype;
