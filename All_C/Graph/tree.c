@@ -1,19 +1,16 @@
 #include <stdio.h>
-#include <malloc.h>
-#include <stdlib.h>
-#include "queue.h"
+#include "../include/data.h"
+#include "../include/queue.h"
 
 /* TODO: queue.c changed, refactor tree to fit it */
 
 // gcc All_C/Tree/tree.c -o excutable/tree -L./lib -lqueue
 
-typedef long int Elemtype;
-
 typedef struct treeNode{
     /* a combination of Bi-direct LinkList and Tree */
     /* we could delete some properties based on needs */
 
-    Elemtype data;
+    Elem data;
 
     /* pre and next is the parts of LinkList */
     /* the order is the level order */
@@ -50,7 +47,7 @@ treeNode *newNode(){
 
 
 Tree *newTree(){
-    /* create a empty tree */
+    /* create an empty tree */
     Tree *node;
     node = (Tree *)malloc(sizeof(Tree));
     if(node == NULL){
@@ -70,22 +67,26 @@ int setLink(Tree *tree){
         return 0;
     }
 
-    appendRight(q, (QElem) node);
+    appendRight(q, (Elem)(void *) node);
     while(! isEmpty(q)){
         // get a node
-        node = (treeNode*)popLeft(q);
+        Elem buf;
+        popLeft(q, &buf);
+        node = (treeNode *)buf.ptr;
         
         // push the child into queue
         child = node->firstchild;
         if(child != NULL){
-            appendRight(q, (QElem) child);
+            appendRight(q, (Elem)(void *) child);
             while((child = child->next) != NULL){
-                appendRight(q, (QElem) child);
+                appendRight(q, (Elem)(void *) child);
             }
         }
 
         // set pre and next link
-        if((next = (treeNode*)getLeft(q, 0)) != NULL){
+
+        if(getLeft(q, 0, &buf)){
+            next = (treeNode *)buf.ptr;
             node->next = next;
             next->pre = node;
         }
@@ -94,8 +95,8 @@ int setLink(Tree *tree){
 }
 
 // TODO: Graph struct
-Tree *createTreeFromAdj(int **adj, Elemtype value[], int num){
-    /* adj is an adj matrix of a undirected graph */
+Tree *createTreeFromAdj(int **adj, Elem *value, int num){
+    /* adj is an adj matrix of an undirected graph */
     /* num is the nodes num */
     /* check this undirected graph whether is ringed */
     // TODO: realize the isRigned
@@ -104,7 +105,6 @@ Tree *createTreeFromAdj(int **adj, Elemtype value[], int num){
     // }
 
     Tree *tree = newTree();
-    int i, j, begin;
     treeNode *node, *child;
     treeNode ** nodelist;
     
@@ -112,11 +112,10 @@ Tree *createTreeFromAdj(int **adj, Elemtype value[], int num){
     nodelist = (treeNode**)malloc(num * sizeof(treeNode*));
     if(nodelist == NULL){
         free(tree);
-        printf("Make nodelist fail\n");
-        exit(1);
+        return NULL;
     }
 
-    for(i = 0; i < num; i++){
+    for(int i = 0; i < num; i++){
         /* create all nodes and write value */
         nodelist[i] = newNode();
         if(nodelist[i] == NULL){
@@ -130,19 +129,19 @@ Tree *createTreeFromAdj(int **adj, Elemtype value[], int num){
     tree->root = nodelist[0];
 
     /* set the edges */
-    for(i = 0; i < num; i++){
+    for(int i = 0; i < num; i++){
         node = nodelist[i];
         /* get the first child */
+        int j;
         for(j = i + 1; j < num; j++){
             if(adj[i][j] == 1){
                 node->firstchild = nodelist[j];
                 child = node->firstchild;
-                begin = j;
                 break;
             }
         }
         /* set the next and sibling */
-        for(j = begin + 1; j < num; j++){
+        for(; j < num; j++){
             if(adj[i][j] == 1){
                 // set pre and next link
                 child->next = nodelist[j];
@@ -164,13 +163,23 @@ Tree *createTreeFromAdj(int **adj, Elemtype value[], int num){
 
     fail:
         free(tree);
-        for(j = 0; j < num; j++){
-            free(nodelist[j]);
+        for(int i = 0; i < num; i++){
+            free(nodelist[i]);
         }
         free(nodelist);
-        exit(1);
+        return NULL;
 }
 
+void preOrderSearch(treeNode *node, Queue* q){
+    if(node != NULL){
+        appendRight(q, node->data);
+        // printf("%d\n", node->data);
+        preOrderSearch(node->firstchild, q);
+        if(node->sibling){
+            preOrderSearch(node->next, q);
+        }
+    }
+}
 
 Queue* preOrder(Tree *tree){
     // return a result queue
@@ -183,32 +192,10 @@ Queue* preOrder(Tree *tree){
     return q;
 }
 
-void preOrderSearch(treeNode *node, Queue* q){
-    if(node != NULL){
-        appendRight(q, (QElem) node->data);
-        // printf("%d\n", node->data);
-        preOrderSearch(node->firstchild, q);
-        if(node->sibling){
-            preOrderSearch(node->next, q);
-        }
-    }
-}
-
-Queue* postOrder(Tree *tree){
-    // return a result queue
-    // the postorder of tree is corresponding to the inorder of bi-tree
-    Queue *q = newQueue(tree->size + 1);
-    if(q == NULL){
-        return NULL;
-    }
-    postOrderSearch(tree->root, q);
-    return q;
-}
-
 void postOrderSearch(treeNode *node, Queue* q){
     if(node != NULL){
         postOrderSearch(node->firstchild, q);
-        appendRight(q, (QElem) node->data);
+        appendRight(q, node->data);
         // printf("%d\n", node->data);
         if(node->sibling){
             postOrderSearch(node->next, q);
@@ -216,14 +203,14 @@ void postOrderSearch(treeNode *node, Queue* q){
     }
 }
 
-Queue* rightPostOrder(Tree *tree){
+Queue* postOrder(Tree *tree){
     // return a result queue
-    // the right postOrder of tree is corresponding to the postorder of bi-tree
+    // the postOrder of tree is corresponding to the inOrder of bi-tree
     Queue *q = newQueue(tree->size + 1);
     if(q == NULL){
         return NULL;
     }
-    rightPostOrderSearch(tree->root, q);
+    postOrderSearch(tree->root, q);
     return q;
 }
 
@@ -233,9 +220,20 @@ void rightPostOrderSearch(treeNode *node, Queue* q){
         if(node->sibling){
             rightPostOrderSearch(node->next, q);
         }
-        appendRight(q, (QElem) node->data);
+        appendRight(q, node->data);
         // printf("%d\n", node->data);
     }
+}
+
+Queue* rightPostOrder(Tree *tree){
+    // return a result queue
+    // the right postOrder of tree is corresponding to the postOrder of bi-tree
+    Queue *q = newQueue(tree->size + 1);
+    if(q == NULL){
+        return NULL;
+    }
+    rightPostOrderSearch(tree->root, q);
+    return q;
 }
 
 Queue* levelOrder(Tree *tree){
@@ -246,42 +244,10 @@ Queue* levelOrder(Tree *tree){
     }
     treeNode* node = tree->root;
     while(node != NULL){
-        appendRight(q, (QElem) node->data);
+        appendRight(q, node->data);
         node = node->next;
     }
     return q;
 }
 
-// void main(){
-//     int i;
-//     int adj[6][6] = {
-//         {0, 1, 1, 1, 0, 0},
-//         {0, 0, 0, 0, 1, 1},
-//         {0, 0, 0, 0, 0, 0},
-//         {0, 0, 0, 0, 0, 0},
-//         {0, 0, 0, 0, 0, 0},
-//         {0, 0, 0, 0, 0, 0}
-//     };
-//     int **test = (int **)malloc(6 * sizeof(int *));
-//     for (i = 0; i < 6; i++) {
-//         test[i] = adj[i];
-//     }
-//     int value[] = {0, 1, 2, 3, 4, 5};
 
-//     Tree *tree = createTreeFromAdj(test, value, 6);
-//     treeNode *node = tree->root;
-//     while(node != NULL){
-//         printf("%d -> ", node->data);
-//         node = node->next;
-//     }
-//     printf("\n");
-
-//     Queue* q1 = preOrder(tree);
-//     displayQueue(q1);
-
-//     Queue* q2 = postOrder(tree);
-//     displayQueue(q2);
-
-//     Queue* q3 = rightPostOrder(tree);
-//     displayQueue(q3);
-// }

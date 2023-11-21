@@ -1,101 +1,98 @@
 #include<stdio.h>
 #include<malloc.h>
-
-/* gcc ./All_C/List/queue.c -fPIC -shared -o ./lib/libqueue.so */
-
-typedef long int QElem;
+#include "../include/data.h"
 
 // use the SqList to realize a simple and effective deque with fixed length
 
 typedef struct{
-   QElem *data;
+   Elem *data;
    size_t front, rear;
    size_t maxsize;
 } Queue;
 
 
 
-Queue *newQueue(size_t maxsize){
+Queue *newQueue(size_t const maxsize){
     Queue *queue = (Queue*)malloc(sizeof(Queue));
     queue->maxsize = maxsize;
-    queue->data = (QElem*)calloc(maxsize, sizeof(QElem));
+    queue->data = (Elem*)calloc(maxsize, sizeof(Elem));
     queue->front = queue->rear = 0;
     return queue;
 }
 
 
-int isEmpty(Queue *q){
+int isEmpty(Queue const *this){
     /* no elem, empty */
-    return q->front == q->rear;
+    return this->front == this->rear;
 }
 
-int isFull(Queue *q){
+int isFull(Queue const *this){
     // if the num of elem is maxsize - 1, full
-    return (q->rear + 1) % q->maxsize == q->front;
+    return (this->rear + 1) % this->maxsize == this->front;
 }
 
-int appendLeft(Queue *q, QElem elem){
-    if(isFull(q)){
+int appendLeft(Queue *this, Elem elem){
+    if(isFull(this)){
         // append fail
         return 0;
     }
-    q->front = (q->front - 1) % q->maxsize;
-    q->data[q->front] = elem;
+    this->front = (this->front - 1) % this->maxsize;
+    this->data[this->front] = elem;
     return 1;
 }
 
-int appendRight(Queue *q, QElem elem){
-    if(isFull(q)){
+int appendRight(Queue *this, Elem elem){
+    if(isFull(this)){
         // append fail
         return 0;
     }
     
-    q->data[q->rear] = elem;
-    q->rear = (q->rear + 1) % q->maxsize;
+    this->data[this->rear] = elem;
+    this->rear = (this->rear + 1) % this->maxsize;
     return 1;
 }
 
-int popLeft(Queue *q, QElem *buf){
-    if(isEmpty(q)){
+int popLeft(Queue *this, Elem *buf){
+    if(isEmpty(this)){
         // pop fail
         return 0;
     }
-    *buf = q->data[q->front];
-    q->front = (q->front + 1) % q->maxsize;
+    *buf = this->data[this->front];
+    this->front = (this->front + 1) % this->maxsize;
     return 1;
 }
 
-int popRight(Queue *q, QElem *buf){
-    if(isEmpty(q)){
+int popRight(Queue *this, Elem *buf){
+    if(isEmpty(this)){
         // pop fail
         return 0;
     }
-    q->rear = (q->rear - 1) % q->maxsize;
-    *buf = q->data[q->rear];
+    this->rear = (this->rear - 1) % this->maxsize;
+    *buf = this->data[this->rear];
     return 1;
 }
 
-int getLeft(Queue *q, size_t index, QElem *buf){
+int getLeft(Queue *this, size_t index, Elem *buf){
     // get elem from left 
-    // index from 0 to (q->rear - q->front -1) % q->maxsize
-    size_t get_index = (q->front + index) % q->maxsize;
-    if(get_index >= q->rear){
+    // index from 0 to (rear - front -1) % maxsize
+    size_t get_index = (this->front + index) % this->maxsize;
+    if(get_index >= this->rear){
         // get fail
         return 0;
     }
-    *buf = q->data[get_index];
+    *buf = this->data[get_index];
     return 1;
 }
 
-int getRight(Queue *q, size_t index, QElem *buf){
+int getRight(Queue *this, size_t index, Elem *buf){
     // get elem from right
     // index from 0 to (q->rear - q->front -1) % q->maxsize
-    size_t get_index = (q->rear - index - 1) % q->maxsize;
-    if(get_index < q->front){
+    size_t get_index = (this->rear - index - 1) % this->maxsize;
+    if(get_index < this->front){
         //get fail
         return 0;
     }
-    *buf = q->data[get_index];
+    *buf = this->data[get_index];
     return 1;
 }
 
@@ -109,30 +106,30 @@ void displayQueue(Queue *this){
     size_t cur = this->front, mod = this->maxsize;
     for(size_t i = 0; i < num; i++){
         // printf int
-        printf("%ld -> ", this->data[(cur + i) % mod]);
+        printf("%ld -> ", this->data[(cur + i) % mod].num_int64);
     }
     printf("Right\n");
 }
 
-void destoryQueue(Queue *q){
-    free(q->data);
-    free(q);
+void deleteQueue(Queue *this){
+    free(this->data);
+    free(this);
 }
 
 
-int main(){
-    Queue *q = newQueue(10), *p = newQueue(10);
-    QElem x = 0;
-    QElem *buf = &x;
-    appendLeft(q, 1);
-    appendLeft(q, 2);
-    appendLeft(q, 10);
-    appendRight(q, 3);
-    popLeft(q, buf);
-    appendLeft(p, *buf);
-    popRight(q, buf);
-    appendLeft(p, *buf);
-    displayQueue(q);
-    displayQueue(p);
-    return 0;
-}
+//int main(){
+//    Queue *q = newQueue(10), *p = newQueue(10);
+//    Elem x = 0;
+//    Elem *buf = &x;
+//    appendLeft(q, 1);
+//    appendLeft(q, 2);
+//    appendLeft(q, 10);
+//    appendRight(q, 3);
+//    popLeft(q, buf);
+//    appendLeft(p, *buf);
+//    popRight(q, buf);
+//    appendLeft(p, *buf);
+//    displayQueue(q);
+//    displayQueue(p);
+//    return 0;
+//}

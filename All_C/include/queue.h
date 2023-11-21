@@ -1,29 +1,34 @@
-typedef long int QElem;
+#include<malloc.h>
+#include "data.h"
 
 // use the SqList to realize a simple and effective deque with fixed length
 
 typedef struct{
-   QElem *data;
-   int front, rear;
-   int maxsize;
+    Elem *data;
+    size_t front, rear;
+    size_t maxsize;
 } Queue;
 
-Queue *newQueue(int maxsize);
 
-int isEmpty(Queue *q);
 
-int isFull(Queue *q);
+Queue *newQueue(size_t maxsize);
 
-int appendLeft(Queue *q, QElem elem);
+int isEmpty(Queue const *this);
 
-int appendRight(Queue *q, QElem elem);
+int isFull(Queue const *this);
 
-QElem popLeft(Queue *q);
+int appendLeft(Queue *this, Elem elem);
 
-QElem popRight(Queue *q);
+int appendRight(Queue *this, Elem elem);
 
-QElem getLeft(Queue *q, int index);
+int popLeft(Queue *this, Elem *buf);
 
-QElem getRight(Queue *q, int index);
+int popRight(Queue *this, Elem *buf);
 
-void displayQueue(Queue *q);
+int getLeft(Queue *this, size_t index, Elem *buf);
+
+int getRight(Queue *this, size_t index, Elem *buf);
+
+void displayQueue(Queue *this);
+
+void deleteQueue(Queue *this);
