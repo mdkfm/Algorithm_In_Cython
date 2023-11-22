@@ -2,9 +2,6 @@
 #include "../include/data.h"
 #include "../include/queue.h"
 
-/* TODO: queue.c changed, refactor tree to fit it */
-
-// gcc All_C/Tree/tree.c -o excutable/tree -L./lib -lqueue
 
 typedef struct treeNode{
     /* a combination of Bi-direct LinkList and Tree */
