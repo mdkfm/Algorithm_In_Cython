@@ -1,3 +1,0 @@
-/home/skf/Code/Notes/Algorithm_In_Cython/All_C/cmake-build-debug/CMakeFiles/All_C.dir
-/home/skf/Code/Notes/Algorithm_In_Cython/All_C/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/skf/Code/Notes/Algorithm_In_Cython/All_C/cmake-build-debug/CMakeFiles/rebuild_cache.dir
