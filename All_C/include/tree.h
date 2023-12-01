@@ -1,6 +1,4 @@
-//
-// Created by skf on 23-11-21.
-//
+/* Created by skf on 23-11-21. */
 
 #include "../include/data.h"
 #include "../include/queue.h"
@@ -57,4 +55,4 @@ Queue* rightPostOrder(Tree *tree);
 
 Queue* levelOrder(Tree *tree);
 
-#endif //ALL_C_TREE_H
+#endif /* ALL_C_TREE_H */

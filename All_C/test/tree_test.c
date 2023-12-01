@@ -1,6 +1,6 @@
-//
-// Created by skf on 23-11-21.
-//
+/* Created by skf on 23-11-21. */
+
+#include "../include/queue.h"
 #include "../include/tree.h"
 
 int main(){
@@ -22,15 +22,15 @@ int main(){
     Tree *tree = createTreeFromAdj(test, value, 6);
 
     Queue* q1 = preOrder(tree);
-    displayQueue(q1);
+    queue_display(q1);
 
     Queue* q2 = postOrder(tree);
-    displayQueue(q2);
+    queue_display(q2);
 
     Queue* q3 = rightPostOrder(tree);
-    displayQueue(q3);
+    queue_display(q3);
 
     Queue* q4 = levelOrder(tree);
-    displayQueue(q4);
+    queue_display(q4);
     return 0;
 }

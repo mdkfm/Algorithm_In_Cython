@@ -8,8 +8,15 @@ test = $(wildcard ./test/*.c)
 test := $(patsubst ./test/%.c, %, $(test))
 all : $(test)
 
-link_list_test: link_list_test.c liblink_list.so
-	gcc $() -o ./test/link_list_test
+
+heap_test: heap_test.c libheap.so lib
+	gcc ./test/heap_test.c ./lib/libheap.so -o ./test/heap_test
+
+queue_test: queue_test.c libqueue.so
+	gcc ./test/queue_test.c ./lib/libqueue.so -o ./test/queue_test
+
+link_test: link_test.c liblink.so
+	gcc ./test/link_test.c ./lib/liblink.so -o ./test/link_test
 
 tree_test: tree_test.c libtree.so libqueue.so
 	gcc ./test/tree_test.c ./lib/libtree.so ./lib/libqueue.so -o ./test/tree_test

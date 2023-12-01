@@ -2,7 +2,6 @@
 #include "../include/data.h"
 #include "../include/queue.h"
 
-
 typedef struct treeNode{
     /* a combination of Bi-direct LinkList and Tree */
     /* we could delete some properties based on needs */
@@ -59,30 +58,30 @@ Tree *newTree(){
 int setLink(Tree *tree){
     /* set the pre and next between different subtrees */
     treeNode *node = tree->root, *child, *next;
-    Queue *q = newQueue(tree->size + 1);
+    Queue *q = queue_new(tree->size + 1);
     if(q == NULL){
         return 0;
     }
 
-    appendRight(q, (Elem)(void *) node);
-    while(! isEmpty(q)){
+    queue_appendRight(q, (Elem)(void *) node);
+    while(! queue_isEmpty(q)){
         // get a node
         Elem buf;
-        popLeft(q, &buf);
+        queue_popLeft(q, &buf);
         node = (treeNode *)buf.ptr;
         
         // push the child into queue
         child = node->firstchild;
         if(child != NULL){
-            appendRight(q, (Elem)(void *) child);
+            queue_appendRight(q, (Elem)(void *) child);
             while((child = child->next) != NULL){
-                appendRight(q, (Elem)(void *) child);
+                queue_appendRight(q, (Elem)(void *) child);
             }
         }
 
         // set pre and next link
 
-        if(getLeft(q, 0, &buf)){
+        if(queue_getLeft(q, 0, &buf)){
             next = (treeNode *)buf.ptr;
             node->next = next;
             next->pre = node;
@@ -95,6 +94,7 @@ int setLink(Tree *tree){
 Tree *createTreeFromAdj(int **adj, Elem *value, int num){
     /* adj is an adj matrix of an undirected graph */
     /* num is the nodes num */
+
     /* check this undirected graph whether is ringed */
     // TODO: realize the isRigned
     // if(isRinged(adj, 0)){
@@ -169,8 +169,7 @@ Tree *createTreeFromAdj(int **adj, Elem *value, int num){
 
 void preOrderSearch(treeNode *node, Queue* q){
     if(node != NULL){
-        appendRight(q, node->data);
-        // printf("%d\n", node->data);
+        queue_appendRight(q, node->data);
         preOrderSearch(node->firstchild, q);
         if(node->sibling){
             preOrderSearch(node->next, q);
@@ -181,7 +180,7 @@ void preOrderSearch(treeNode *node, Queue* q){
 Queue* preOrder(Tree *tree){
     // return a result queue
     // the preorder of tree is corresponding to the preorder of bi-tree
-    Queue *q = newQueue(tree->size + 1);
+    Queue *q = queue_new(tree->size);
     if(q == NULL){
         return NULL;
     }
@@ -192,7 +191,7 @@ Queue* preOrder(Tree *tree){
 void postOrderSearch(treeNode *node, Queue* q){
     if(node != NULL){
         postOrderSearch(node->firstchild, q);
-        appendRight(q, node->data);
+        queue_appendRight(q, node->data);
         // printf("%d\n", node->data);
         if(node->sibling){
             postOrderSearch(node->next, q);
@@ -203,7 +202,7 @@ void postOrderSearch(treeNode *node, Queue* q){
 Queue* postOrder(Tree *tree){
     // return a result queue
     // the postOrder of tree is corresponding to the inOrder of bi-tree
-    Queue *q = newQueue(tree->size + 1);
+    Queue *q = queue_new(tree->size);
     if(q == NULL){
         return NULL;
     }
@@ -217,7 +216,7 @@ void rightPostOrderSearch(treeNode *node, Queue* q){
         if(node->sibling){
             rightPostOrderSearch(node->next, q);
         }
-        appendRight(q, node->data);
+        queue_appendRight(q, node->data);
         // printf("%d\n", node->data);
     }
 }
@@ -225,7 +224,7 @@ void rightPostOrderSearch(treeNode *node, Queue* q){
 Queue* rightPostOrder(Tree *tree){
     // return a result queue
     // the right postOrder of tree is corresponding to the postOrder of bi-tree
-    Queue *q = newQueue(tree->size + 1);
+    Queue *q = queue_new(tree->size);
     if(q == NULL){
         return NULL;
     }
@@ -235,13 +234,13 @@ Queue* rightPostOrder(Tree *tree){
 
 Queue* levelOrder(Tree *tree){
     // return a result queue
-    Queue *q = newQueue(tree->size + 1);
+    Queue *q = queue_new(tree->size + 1);
     if(q == NULL){
         return NULL;
     }
     treeNode* node = tree->root;
     while(node != NULL){
-        appendRight(q, node->data);
+        queue_appendRight(q, node->data);
         node = node->next;
     }
     return q;
