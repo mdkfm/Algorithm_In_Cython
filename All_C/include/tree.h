@@ -1,10 +1,11 @@
 /* Created by skf on 23-11-21. */
 
-#include "../include/data.h"
-#include "../include/queue.h"
-
 #ifndef ALL_C_TREE_H
 #define ALL_C_TREE_H
+#include "data.h"
+#include "gnuc.h"
+#include "rlist.h"
+#include "list.h"
 
 typedef struct treeNode{
     /* a combination of Bi-direct LinkList and Tree */
@@ -32,27 +33,18 @@ typedef struct Tree{
     int size;
 } Tree;
 
+__malloc Tree *tree_new();
+int tree_initFromAdj(Tree *this, long **adj, Elem *value, int num);
 
-treeNode *newNode();
+void tree_preOrderSearch(treeNode const*const node, List *const q);
+int tree_preOrder(Tree const*const tree, List *const buf);
 
-Tree *newTree();
+void tree_postOrderSearch(treeNode const*const node, List *const q);
+int tree_postOrder(Tree const*const tree, List *const buf);
 
-int setLink(Tree *tree);
+void tree_rightPostOrderSearch(treeNode const*const node, List *const q);
+int tree_rightPostOrder(Tree const*const tree, List *const buf);
 
-Tree *createTreeFromAdj(int **adj, Elem *value, int num);
-
-void preOrderSearch(treeNode *node, Queue* q);
-
-Queue* preOrder(Tree *tree);
-
-void postOrderSearch(treeNode *node, Queue* q);
-
-Queue* postOrder(Tree *tree);
-
-void rightPostOrderSearch(treeNode *node, Queue* q);
-
-Queue* rightPostOrder(Tree *tree);
-
-Queue* levelOrder(Tree *tree);
+int tree_levelOrder(Tree const*const tree, List *const buf);
 
 #endif /* ALL_C_TREE_H */

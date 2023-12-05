@@ -1,7 +1,7 @@
 #include<malloc.h>
 #include<stdio.h>
 #include "../include/data.h"
-#include "../include/queue.h"
+#include "../include/rlist.h"
 
 typedef struct BTNode{
     Elem data;

@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <malloc.h>
-#include "../include/data.h"
+
 #include "../include/link.h"
 
-/* TODO: Refactor with link prefix and refactor other file */
-
-Link* link_new(){
+__malloc Link* link_new(){
     Link *link = (Link*)malloc(sizeof(Link));
     if(link == NULL) return NULL;
 
@@ -27,24 +25,26 @@ Link* link_new(){
     return link;
 }
 
-long unsigned link_initFromArray(Link * const this, Elem const * const list, long const length, int const reversed){
+size_t link_appendList(Link * const this, Elem const * const list, size_t const length, int const reversed){
     /* construct a LinkList, based on list */
     /* length: the read length of list */
     /* reversed: 0 origin, 1 reversed */
-    /* return the wrote length of list */
-    if(length <= 0) return 0;
 
-    LinkNode *s, *last = this->head; /* s tmp node */
+    /* no error: return the wrote length of list
+     * length error: return 0 */
+
+    if(length == 0) return 0;
 
     /* the start, end and step of the loop */
     long start = reversed ? length - 1 : 0;
     long end = reversed ? -1 : length;
     int step = reversed ? -1 : 1;
 
-    long unsigned _length = 0;
+    size_t _length = 0;
+    LinkNode *last = this->tail->pre;
     for (int i = start; i != end; i += step){
-        s = (LinkNode *) malloc(sizeof(LinkNode));
-        if(s == NULL) break;
+        LinkNode *s = (LinkNode *) malloc(sizeof(LinkNode));
+        if(unlikely(s == NULL)) break;
         _length ++;
         s->data = list[i];
         last->next = s;
@@ -68,6 +68,10 @@ LinkNode * link_newNode(){
     return new;
 }
 
+void link_deleteNode(LinkNode *this){
+    free(this);
+}
+
 void link_delete(Link *this){
     LinkNode *head = this->head,*p = head->next;
     while(p != NULL){
@@ -79,18 +83,11 @@ void link_delete(Link *this){
     free(this);
 }
 
-int link_isEmpty(Link const * const this){
-    return (this->head->next == this->tail);
-}
 
-long unsigned link_getLength(Link const * const this){
-    return this->length;
-}
-
-long unsigned link_toArray(Link const * const this, Elem * const buf ,long unsigned const length){
+size_t link_toArray(Link const * const this, Elem * const buf ,size_t const length){
     /* length: output the length */
     LinkNode const *p = this->head->next;
-    long unsigned  max_length = link_getLength(this);
+    size_t  max_length = link_length(this);
     max_length = max_length > length ? length : max_length;
 
     for(int i = 0; i < max_length; i++){
@@ -102,7 +99,7 @@ long unsigned link_toArray(Link const * const this, Elem * const buf ,long unsig
 
 void link_display(Link const * const this){
     LinkNode const *p = this->head->next;
-    long unsigned length = link_getLength(this);
+    size_t length = link_length(this);
     printf("Head");
     for(int i = 0; i < length; i++){
         /* where %ld is only used for int */
@@ -112,11 +109,11 @@ void link_display(Link const * const this){
     printf("\n");
 }
 
-LinkNode *link_getNodeLeft(Link const * const this, long unsigned const index){
+LinkNode *link_getNodeLeft(Link const * const this, size_t const index){
     /* The index begins from 0 */
     /* the 0 index is the head node */
     LinkNode *p = this->head;
-    long unsigned length = link_getLength(this);
+    size_t length = link_length(this);
     if(index > length){
         return NULL;
     }
@@ -126,11 +123,11 @@ LinkNode *link_getNodeLeft(Link const * const this, long unsigned const index){
     return p;
 }
 
-LinkNode *link_getNodeRight(Link const * const this, long unsigned const index){
+LinkNode *link_getNodeRight(Link const * const this, size_t const index){
     /* The index begins from 0 */
     /* the 0 index is the tail node */
     LinkNode *p = this->tail;
-    long unsigned length = link_getLength(this);
+    size_t length = link_length(this);
     if(index > length){
         return NULL;
     }
@@ -140,49 +137,58 @@ LinkNode *link_getNodeRight(Link const * const this, long unsigned const index){
     return p;
 }
 
-int link_getLeft(Link const * const this, long unsigned const index, Elem * const buf){
+int link_getLeft(Link const * const this, size_t const index, Elem * const buf){
     /* The index begins from 0 */
     /* the 0 index is the head node */
+
+    /* no error: return 0
+     * index error: return -1 */
+
     LinkNode *p = link_getNodeLeft(this, index);
     if(p == NULL){
-        return 0;
+        return -1;
     }
     *buf = p->data;
-    return 1;
+    return 0;
 }
 
-int link_getRight(Link const * const this, long unsigned const index, Elem * const buf){
+int link_getRight(Link const * const this, size_t const index, Elem * const buf){
     /* The index begins from 0 */
     /* the 0 index is the tail node */
+
+    /* no error: return 0
+     * index error: return -1 */
     LinkNode *p = link_getNodeRight(this, index);
     if(p == NULL){
-        return 0;
+        return -1;
     }
     *buf = p->data;
-    return 1;
+    return 0;
 }
 
 int link_search(Link const * const this, Elem const element){
     int index = 1;
-    LinkNode const *p = this->head->next;
-    while( p != NULL && p->data.num_int64 != element.num_int64){
+    LinkNode const * p = this->head->next;
+    LinkNode const*const end = this->tail;
+    while(p != end && p->data.num_int64 != element.num_int64){
         p = p->next;
         index ++;
     }
     if(p->next == NULL){
-        return 0;
+        return -1;
     }
     return index;
 }
 
-long unsigned link_deleteAll(Link * const this, Elem const element){
+size_t link_deleteAll(Link * const this, Elem const element){
     /* delete all the element */
     /* return the number of deleted element */
     LinkNode *p = this->head;
-    long unsigned num = 0;
-    while(p != NULL){
+    LinkNode const*const end = this->tail;
+    size_t num = 0;
+    while(p != end){
         LinkNode * target;
-        while(p->next != NULL && p->next->data.num_int64 == element.num_int64){
+        while(p->next != end && p->next->data.num_int64 == element.num_int64){
             target = p->next;
             p->next = target->next;
             free(target);
@@ -194,15 +200,20 @@ long unsigned link_deleteAll(Link * const this, Elem const element){
     return num;
 }
 
-int link_insertLeft(Link * const this, long unsigned const index, Elem const element){
+int link_insertLeft(Link * const this, size_t const index, Elem const element){
     /* The index begins from 1 */
+
+    /* no error: return 0
+     * index error: return -1
+     * malloc fail: return -2 */
+
     LinkNode *p = link_getNodeLeft(this, index - 1);
     if(p == NULL){
-        return 0;
+        return -1;
     }
     LinkNode *s = link_newNode();
     if(s == NULL){
-        return 0;
+        return -2;
     }
     s->data = element;
 
@@ -212,19 +223,24 @@ int link_insertLeft(Link * const this, long unsigned const index, Elem const ele
     p->next = s;
     s->pre = p;
 
-    this->length ++;
-    return 1;
+    this->length++;
+    return 0;
 }
 
-int link_insertRight(Link * const this, long unsigned const index, Elem const element){
+int link_insertRight(Link * const this, size_t const index, Elem const element){
     /* The index begins from 1 */
+
+    /* no error: return 0
+     * index error: return -1
+     * malloc fail: return -2 */
+
     LinkNode *p = link_getNodeRight(this, index - 1);
     if(p == NULL){
-        return 0;
+        return -1;
     }
     LinkNode *s = link_newNode();
     if(s == NULL){
-        return 0;
+        return -2;
     }
     s->data = element;
 
@@ -235,13 +251,16 @@ int link_insertRight(Link * const this, long unsigned const index, Elem const el
     s->next = p;
 
     this->length ++;
-    return 1;
+    return 0;
 }
 
 int link_insertFirstLeft(Link * const this, Elem const element){
+    /* no error: return 0
+     * malloc fail: return -1 */
+
     LinkNode *s = link_newNode();
     if(s == NULL){
-        return 0;
+        return -1;
     }
     s->data = element;
     LinkNode *head = this->head, *next = head->next;
@@ -251,13 +270,16 @@ int link_insertFirstLeft(Link * const this, Elem const element){
     s->pre = head;
 
     this->length ++;
-    return 1;
+    return 0;
 }
 
 int link_insertFirstRight(Link * const this, Elem const element){
+    /* no error: return 0
+     * malloc fail: return -1 */
+
     LinkNode *s = link_newNode();
     if(s == NULL){
-        return 0;
+        return -1;
     }
     s->data = element;
     LinkNode *tail = this->tail, *pre = tail->pre;
@@ -267,58 +289,67 @@ int link_insertFirstRight(Link * const this, Elem const element){
     s->next = tail;
 
     this->length ++;
-    return 1;
+    return 0;
 }
 
-int link_popLeft(Link * const this, Elem *const buf, long unsigned const index){
+
+int link_popLeft(Link * const this, Elem *const buf, size_t const index){
     /* The index begins from 1 */
     /* because the head node should not be pop */
-    if(index < 1){
-        return 0;
+
+    /* no error: return 0
+     * index error: return -1 */
+
+    size_t length = link_length(this);
+    if(index < 1 || index > length){
+        return -1;
     }
-    LinkNode *p = link_getNodeLeft(this, index - 1);
-    if(p == NULL || p->next == NULL){
-        return 0;
-    }
-    
-    LinkNode *target = p->next, *next = target->next;
-    *buf = target->data;
-    p->next = next;
-    next->pre = p;
-    free(target);
+
+    LinkNode *p = link_getNodeLeft(this, index);
+    *buf = p->data;
+
+    LinkNode *pre = p->pre, *next = p->next;
+    pre->next = next;
+    next->pre = pre;
+    link_deleteNode(p);
     this->length --;
-    return 1;
+    return 0;
 }
 
 int link_popLeftFirst(Link * const this, Elem * const buf){
+    /* no error: return 0
+     * link empty: return -1 */
     if(link_isEmpty(this)){
-        return 0;
+        return -1;
     }
     LinkNode *head = this->head, *target = head->next, *next = target->next;
     *buf = target->data;
+
     head->next = next;
     next->pre = head;
-    free(target);
+    link_deleteNode(target);
     this->length --;
-    return 1;
+    return 0;
 }
 
-int link_popRight(Link * const this, Elem *const buf, long unsigned const index){
+int link_popRight(Link * const this, Elem *const buf, size_t const index){
     /* The index begins from 1 */
     /* because the tail node should not be pop */
-    if(index < 1){
-        return 0;
-    }
-    LinkNode *p = link_getNodeRight(this, index - 1);
-    if(p == NULL || p->pre == NULL){
-        return 0;
+
+    /* no error: return 0
+     * index error: return -1 */
+    size_t length = link_length(this);
+    if(index < 1 || index > length){
+        return -1;
     }
 
-    LinkNode *target = p->pre, *pre = target->pre;
-    *buf = target->data;
-    p->pre = pre;
-    pre->next = p;
-    free(target);
+    LinkNode *p = link_getNodeRight(this, index);
+    *buf = p->data;
+
+    LinkNode *pre = p->pre, *next = p->next;
+    pre->next = next;
+    next->pre = pre;
+    link_deleteNode(p);
     this->length --;
     return 1;
 }
@@ -329,31 +360,10 @@ int link_popRightFirst(Link * const this, Elem * const buf){
     }
     LinkNode *tail = this->tail, *target = tail->pre, *pre = target->pre;
     *buf = target->data;
+
     tail->pre = pre;
     pre->next = tail;
-    free(target);
+    link_deleteNode(target);
     this->length --;
     return 1;
 }
-
-//LinkT const linkT = {
-//    .new = newLink,
-//    .initFromArray = initFromArrayLink,
-//    .delete = deleteLink,
-//    .isEmpty = isEmptyLink,
-//    .getLength = getLengthLink,
-//    .toArray = toArrayLink,
-//    .display = displayLink,
-//    .getLeft = getLeftLink,
-//    .getRight = getRightLink,
-//    .search = searchLink,
-//    .deleteAll = deleteAllLink,
-//    .insertLeft = insertLeftLink,
-//    .insertRight = insertRightLink,
-//    .insertFirstLeft = insertFirstLeftLink,
-//    .insertFirstRight = insertFirstRightLink,
-//    .popLeft = popLeftLink,
-//    .popLeftFirst = popLeftFirstLink,
-//    .popRight = popRightLink,
-//    .popRightFirst = popRightFirstLink
-//};

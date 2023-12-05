@@ -1,6 +1,8 @@
 #include <stdexcept>
 #include "../List/queue.cpp"
 
+/* TODO: refactor to delete the template */
+
 template<long unsigned _node_num>
 class Graph{
 private:
@@ -16,7 +18,9 @@ public:
     double get_edge(long unsigned a, long unsigned b) const;
     void set_edge(long unsigned a, long unsigned b, double weight = 1.0);
     Queue<long unsigned> DFS(long unsigned start) const;
+    Queue<long unsigned> DFS_All() const;
     Queue<long unsigned> BFS(long unsigned start) const;
+    Queue<long unsigned> BFS_All() const;
     Queue<long unsigned> topoSort() const;
     bool isRinged() const;
 };
@@ -84,6 +88,29 @@ Queue<long unsigned> Graph<_node_num>::DFS(long unsigned start) const{
 }
 
 template<long unsigned _node_num>
+Queue<long unsigned> Graph<_node_num>::DFS_All() const{
+    /* DFS all nodes, also for not linked graph */
+    Queue<long unsigned> result(_node_num), stack(_node_num);
+    bool visited[_node_num] = {false};
+    for(long unsigned i = 0; i < _node_num; i++){
+        if(visited[i]) continue;
+        stack.appendRight(i);
+        visited[i] = true;
+        while(!stack.isEmpty()){
+            long unsigned node = stack.popRight();
+            result.appendRight(node);
+            for(long unsigned j = 0; j < _node_num; j++){
+                if(_adj_matrix[node][j] != 0.0 && !visited[j]){
+                    stack.appendRight(j);
+                    visited[j] = true;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+template<long unsigned _node_num>
 Queue<long unsigned> Graph<_node_num>::BFS(long unsigned start) const{
     /* BFS from start */
     Queue<long unsigned> result(_node_num), queue(_node_num);
@@ -99,6 +126,30 @@ Queue<long unsigned> Graph<_node_num>::BFS(long unsigned start) const{
                 visited[i] = true;
             }
         }
+    }
+    return result;
+}
+
+template<long unsigned _node_num>
+Queue<long unsigned> Graph<_node_num>::BFS_All() const{
+    /* BFS all nodes, also for not linked graph */
+    Queue<long unsigned> result(_node_num), queue(_node_num);
+    bool visited[_node_num] = {false};
+    for(long unsigned i = 0; i < _node_num; i++){
+        if(visited[i]) continue;
+        queue.appendRight(i);
+        visited[i] = true;
+        while(!queue.isEmpty()){
+            long unsigned node = queue.popLeft();
+            result.appendRight(node);
+            for(long unsigned j = 0; j < _node_num; j++){
+                if(_adj_matrix[node][j] != 0.0 && !visited[j]){
+                    queue.appendRight(j);
+                    visited[j] = true;
+                }
+            }
+        }
+
     }
     return result;
 }
@@ -190,6 +241,23 @@ template<long unsigned _node_num>
 bool Graph<_node_num>::isRinged() const{
     /* check whether the graph is ringed */
     /* In DFS, if a node is visited twice, then the graph is ringed */
-    if(directed) return isRinged_directed();
-    else return isRinged_undirected();
+    return directed ? isRinged_directed() : isRinged_undirected();
+}
+
+
+int main(){
+    double adj_matrix[5][5] = {
+        {0, 1, 0, 0, 0},
+        {1, 0, 0, 1, 1},
+        {0, 0, 0, 0, 0},
+        {0, 1, 0, 0, 1},
+        {0, 1, 0, 1, 0}
+    };
+    Graph<5> graph(adj_matrix, false, false);
+    Queue<long unsigned> result = graph.DFS_All();
+    for(long unsigned i = 0; i < 5; i++){
+        std::cout << result.popLeft() << " ";
+    }
+    std::cout << std::endl;
+    return 0;
 }

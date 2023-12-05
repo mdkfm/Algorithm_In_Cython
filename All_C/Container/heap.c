@@ -4,19 +4,22 @@
 #include "../include/data.h"
 #include "../include/heap.h"
 
-#define PARENT(i) ((i) - 1) >> 1
-#define LEFT(i) ((i) << 1) + 1
-#define RIGHT(i) ((i) << 1) + 2
-
 #define HEAP_DEBUG 0
 
 
-Heap* heap_new(long unsigned const maxsize, int (*cmp)(Elem const, Elem const)){
+__malloc Heap* heap_new(size_t const maxsize, int (*cmp)(Elem const, Elem const)){
+    if(cmp == NULL){
+        return NULL;
+    }
+
     Heap *this = (Heap *)malloc(sizeof(Heap));
     if(this == NULL){
         return NULL;
     }
-
+    if(cmp == NULL){
+        free(this);
+        return NULL;
+    }
     /* The first node is 0 */
     this->data = (Elem *)malloc(sizeof(Elem) * maxsize);
     if(this->data == NULL){
@@ -29,25 +32,37 @@ Heap* heap_new(long unsigned const maxsize, int (*cmp)(Elem const, Elem const)){
     return this;
 }
 
+static inline size_t heap_PARENT(size_t const i){
+    return ((i) - 1) >> 1;
+}
 
-void heap_heapify(Heap * const this, long unsigned const start){
+static inline size_t heap_LEFT(size_t const i){
+    return ((i) << 1) + 1;
+}
+
+static inline size_t heap_RIGHT(size_t const i){
+    return ((i) << 1) + 2;
+}
+
+void heap_heapify(Heap * const this, size_t const start){
+    /* heapify the heap from start */
     Elem * const list = this->data;
-    long unsigned const length = this->size;
+    size_t const length = this->size;
     int (*cmp)(Elem const, Elem const) = this->cmp;
 
-    long unsigned node = start;
+    size_t node = start;
     Elem key = list[start];
     while(1){
-        long unsigned index = node;
+        size_t index = node;
         Elem max = key;
 
         /* use cmv instead if */
         /* get the max between key, left and right */
-        long unsigned l = LEFT(node);
+        size_t l = heap_LEFT(node);
         l = l < length ? l : node;
         Elem left = list[l];
 
-        long unsigned r = RIGHT(node);
+        size_t r = heap_RIGHT(node);
         r = r < length ? r : node;
         Elem right = list[r];
 
@@ -59,7 +74,7 @@ void heap_heapify(Heap * const this, long unsigned const start){
         index = cond2 ? r : index;
         max = cond2 ? right : max;
 
-        if(index == node){
+        if(unlikely(index == node)){
             break;
         }
 
@@ -71,30 +86,38 @@ void heap_heapify(Heap * const this, long unsigned const start){
     list[node] = key;
 }
 
-void heap_display(Heap const * const this);
+void heap_display(Heap const * const this){
+    if(unlikely(heap_isEmpty(this))){
+        printf("Empty heap\n");
+        return;
+    }
 
-void heap_init(Heap * const this, Elem * const list, long unsigned const length){
-    for (long unsigned i = 0; i < length; ++i) {
+    size_t length = heap_size(this);
+    Elem * const list = this->data;
+    for (size_t i = 0; i < length; ++i) {
+        printf("%ld ", list[i].num_int64);
+    }
+    printf("\n");
+}
+
+int heap_init(Heap * const this, Elem * const list, size_t const length){
+    if(length > this->maxsize){
+        return -1;
+    }
+
+    for (size_t i = 0; i < length; ++i) {
         this->data[i] = list[i];
     }
     this->size = length;
 
-    for(long unsigned i = length / 2 - 1; ; i--){
+    for(size_t i = length / 2 - 1; ; i--){
         heap_heapify(this, i);
-        if(i == 0) break;
+        if(unlikely(i == 0)) break;
 #if HEAP_DEBUG
         heap_display(this);
 #endif
     }
-}
-
-void heap_display(Heap const * const this){
-    long unsigned length = this->size;
-    Elem * const list = this->data;
-    for (long unsigned i = 0; i < length; ++i) {
-        printf("%ld ", list[i].num_int64);
-    }
-    printf("\n");
+    return 0;
 }
 
 void heap_delete(Heap * const this){
@@ -102,43 +125,56 @@ void heap_delete(Heap * const this){
     free(this);
 }
 
-Elem heap_top(Heap const * const this){
-    return this->data[0];
+int heap_top(Heap const * const this, Elem * const buf){
+    if(unlikely(heap_isEmpty(this))){
+        return -1;
+    }
+    *buf = this->data[0];
+    return 0;
 }
 
-Elem heap_pop(Heap * const this){
+int heap_pop(Heap * const this, Elem * const buf){
+    if(unlikely(heap_isEmpty(this))){
+        return -1;
+    }
+
     Elem * const list = this->data;
-    long unsigned length = this->size;
-    Elem top = list[0];
+    size_t length = this->size;
+
+    *buf = list[0]; /* get the top element */
+
+    /* move the last element to the top
+     * and heapify the heap */
     list[0] = list[length - 1];
     this->size --;
     heap_heapify(this, 0);
-    return top;
+
+    return 0;
 }
 
-int heap_insert(Heap * const this, Elem const key){
+int heap_append(Heap * const this, Elem const key){
     /* Insert an element into the heap */
-    if(this->size >= this->maxsize){
-        return 0;
+    if(unlikely(heap_isFull(this))){
+        return -1;
     }
-    long unsigned i = this->size;
+    size_t i = this->size;
     this->size ++;
     this->data[i] = key;
 
     Elem * const list = this->data;
     int (*cmp)(Elem const, Elem const) = this->cmp;
 
-    while(i != 0 && cmp(list[PARENT(i)], key) < 0){
+    while(i != 0 && cmp(list[heap_PARENT(i)], key) < 0){
         /* from bottom to top, time complexity O(lg(n)) */
-        long unsigned parent = PARENT(i);
+        size_t parent = heap_PARENT(i);
         list[i] = list[parent];
         i = parent;
     }
     list[i] = key;
-    return 1;
+    return 0;
 }
 
-int heap_increase(Heap * const this, long unsigned const index, Elem const key){
+int heap_increase(Heap * const this, size_t const index, Elem const key){
     /* increase the index element to key */
     /* similar with heap_insert */
     if(index >= this->size){
@@ -150,10 +186,10 @@ int heap_increase(Heap * const this, long unsigned const index, Elem const key){
         return 0;
     }
     list[index] = key;
-    long unsigned i = index;
-    while(i != 0 && cmp(list[PARENT(i)], key) < 0){
+    size_t i = index;
+    while(i != 0 && cmp(list[heap_PARENT(i)], key) < 0){
         /* same as heap_insert */
-        long unsigned parent = PARENT(i);
+        size_t parent = heap_PARENT(i);
         list[i] = list[parent];
         i = parent;
     }

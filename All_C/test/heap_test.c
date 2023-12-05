@@ -1,6 +1,4 @@
-//
-// Created by skf on 23-12-1.
-//
+/* Created by skf on 23-12-1. */
 #include <malloc.h>
 
 #include "../include/heap.h"
@@ -19,8 +17,10 @@ int main(){
 
     heap_display(H1);
     long unsigned length = H1->size;
+    Elem buf;
     for(int i = 0; i < length; i++){
-        printf("%ld ", heap_pop(H1).num_int64);
+        heap_pop(H1, &buf);
+        printf("%ld ", buf.num_int64);
     }
     printf("\n");
 }

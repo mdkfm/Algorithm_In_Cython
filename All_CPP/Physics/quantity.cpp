@@ -1,6 +1,8 @@
 #include<cmath>
 #include<iostream>
 
+/* TODO: Realize the dimension and unit system in Physics */
+
 class Dimension {
 private:
     int dmns[6]; // the degree of every dmn except 1

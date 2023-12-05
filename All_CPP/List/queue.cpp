@@ -11,6 +11,7 @@ public:
     Queue(long unsigned maxsize);
     bool isEmpty() const;
     bool isFull() const;
+    long unsigned size() const;
     void appendLeft(QElem elem);
     void appendRight(QElem elem);
     QElem popLeft();
@@ -31,6 +32,12 @@ template<class QElem>
 bool Queue<QElem>::isEmpty() const{
     /* no elem, empty */
     return front == rear;
+}
+
+template<class QElem>
+long unsigned Queue<QElem>::size() const{
+    /* size = (rear - front + maxsize + 1) % maxsize */
+    return (rear + maxsize + 1 - front) % (maxsize + 1);
 }
 
 template<class QElem>
