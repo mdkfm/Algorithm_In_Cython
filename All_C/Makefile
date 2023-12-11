@@ -14,7 +14,7 @@ container = $(wildcard ./Container/*.c)
 lib = $(patsubst ./Container/%.c, ./lib/lib%.so, $(container))
 
 $(test): %_test : %_test.c %.c $(lib)
-	$(CC) $^ -o $@ $(CFLAGS)
+	$(CC) $^ -o ./test/$@ $(CFLAGS)
 
 $(lib): ./lib/lib%.so : %.c %.h
 	$(CC) $< -fPIC -shared -o $@ $(CFLAGS)
