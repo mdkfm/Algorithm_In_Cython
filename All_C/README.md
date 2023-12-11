@@ -1,7 +1,4 @@
 # Basic containers
-&emsp;&emsp;`list`, `rlist`(ringed list), `link`, 
-`bitree`, `stree`(search tree), `matrix`.
-
 ## Link
 &emsp;&emsp;`Link` is a bidirectional linked list.
 
@@ -15,8 +12,8 @@
 - `search`: search the Element and return the index.
 - `deleteAll`: delete all Elements equal to deleted.
 
-## List
-&emsp;&emsp;`List` is a normal list.
+## Stack
+&emsp;&emsp;`List` is a normal stack.
 
 &emsp;&emsp;Basic methods:
 - `isEmpty`, `isFull`: check if the list is empty or full.
@@ -25,10 +22,10 @@
 - `append`: append an Element at index.
 - `pop`: pop the index Element.
 
-## RList
-&emsp;&emsp;`RList` is a ringed list.
+## Deque
+&emsp;&emsp;`Deque` is a ringed list.
 
-&emsp;&emsp;Basic methods, similar with `List`, and extra:
+&emsp;&emsp;Basic methods, similar with `Deque`, and extra:
 - `appendList`: append the Elements of a list to the right end of the rlist.
 - `appendLeft`, `appendRight`: append an Element to left or right end.
 - `popLeft`, `popRight`: pop the left or right end Element.
@@ -53,4 +50,14 @@ typedef struct Heap{
 - `pop`: pop the top Element.
 - `append`: append an Element to the heap.
 - `increase`: increase the value of the index Element.
+
+
+## List
+&emsp;&emsp;`List` is a list that supports slicing.
+
+&emsp;&emsp;Basic methods:
+- `set`: set the Element at index.
+- `get`: get the Element at index.
+- `write`: write the Elements of a list to the list according to slice.
+- `view`: view the Elements of a list according to slice.
 

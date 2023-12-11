@@ -14,22 +14,22 @@ typedef struct Heap{
     size_t maxsize;
 } Heap;
 
-__malloc Heap* heap_new(size_t const maxsize, int (*cmp)(Elem const, Elem const));
+__receive __malloc Heap*const heap_new(size_t const maxsize, int (*cmp)(Elem const, Elem const));
 
 /* $Begin static inline */
-static inline int heap_isEmpty(Heap const * const this){
+__receive static inline int heap_isEmpty(Heap const * const this){
     return this->size == 0;
 }
 
-static inline int heap_isFull(Heap const * const this){
+__receive static inline int heap_isFull(Heap const * const this){
     return this->size == this->maxsize;
 }
 
-static inline size_t heap_size(Heap const * const this){
+__receive static inline size_t heap_size(Heap const * const this){
     return this->size;
 }
 
-static inline size_t heap_freeSize(Heap const * const this){
+__receive static inline size_t heap_freeSize(Heap const * const this){
     return this->maxsize - this->size;
 }
 /* $End static inline */

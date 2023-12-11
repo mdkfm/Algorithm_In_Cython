@@ -1,44 +1,37 @@
 //
-// Created by skf on 23-12-5.
+// Created by skf on 23-12-10.
 //
 
 #ifndef ALL_C_LIST_H
 #define ALL_C_LIST_H
-#include "data.h"
-#include "gnuc.h"
+#include "../include/data.h"
+#include "../include/gnuc.h"
 
 typedef struct List{
-    size_t maxsize;
-    size_t index;
     Elem *data;
+    size_t length;
+
+    /* read mode */
+    long step;
+
+    /* view chain */
+    struct List *pre;
+    struct List *next;
 } List;
 
-__malloc List *list_new(size_t const maxsize);
+typedef struct ListSlice{
+    size_t start;
+    size_t end;
+    int step;
+} ListSlice;
+
+__used __malloc List *const list_new(size_t const length);
 void list_delete(List * this);
-int list_init(List *const this, Elem const *const data, size_t const length);
-
-/* $Begin static inline */
-static inline int list_isFull(List const *const this) {
-    /* if the num of elem is maxsize, full */
-    return this->index == this->maxsize;
-}
-
-static inline int list_isEmpty(List const *const this) {
-    /* no elem, empty */
-    return this->index == 0;
-}
-
-static inline size_t list_size(List const *const this) {
-    return this->index;
-}
-
-static inline size_t list_freeSize(List const *const this) {
-    return this->maxsize - this->index;
-}
-/* $End static inline */
-
-int list_get(List const *const this, Elem *const buf, size_t const index, int const reversed);
-int list_append(List *const this, Elem const elem);
-int list_pop(List *const this, Elem *const buf);
+void list_raii(List **this);
+int list_set(List *const this, size_t const index, Elem const elem);
+int list_get(List const*const this, size_t const index, Elem *const buf);
+int list_write(List *const this, ListSlice const slice, Elem *const array, size_t const length);
+List* list_view(List *const this, ListSlice slice);
+void list_display(List const*const this);
 
 #endif //ALL_C_LIST_H

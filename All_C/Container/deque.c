@@ -1,38 +1,39 @@
 #include<stdio.h>
 
-#include "../include/rlist.h"
+#include "../include/deque.h"
 
-__malloc RList *rlist_new(size_t const maxsize){
-    RList *rlist = (RList*)malloc(sizeof(RList));
-    rlist->maxsize = maxsize;
-    rlist->data = (Elem*)calloc(maxsize, sizeof(Elem));
-    rlist->front = rlist->rear = 0;
-    return rlist;
+__receive __malloc Deque*const deque_new(size_t const maxsize){
+    Deque *new = (Deque*)malloc(sizeof(Deque));
+    new->maxsize = maxsize;
+    new->size = 0;
+    new->data = (Elem*)calloc(maxsize, sizeof(Elem));
+    new->front = new->rear = 0;
+    return new;
 }
 
-__malloc RList *rlist_transFromList(List *list){
-    /* transform a list to a rlist */
-    /* the list will be free */
-    RList *rlist = (RList*)malloc(sizeof(RList));
-    rlist->size = list->index;
-    rlist->front = 0;
-    rlist->rear = list->index;
-    rlist->maxsize = list->maxsize;
-    rlist->data = list->data;
+__receive Deque*const deque_transFromStack(Stack *stack){
+    /* transform a stack to a deque */
+    /* the stack will be free */
+    Deque *deque = (Deque*)malloc(sizeof(Deque));
+    deque->size = stack->size;
+    deque->front = 0;
+    deque->rear = stack->size;
+    deque->maxsize = stack->maxsize;
+    deque->data = stack->data;
 
-    free(list);
-    return rlist;
+    free(stack);
+    return deque;
 }
 
-int rlist_appendList(RList * const this, List const*const list){
-    /* init a rlist from a list, shallow copy the data from list into this */
-    /* the list will not be free */
-    if(unlikely(list_size(list) > rlist_freeSize(this))){
+int deque_appendStack(Deque * const this, Stack const*const stack){
+    /* init a deque from a stack, shallow copy the data from stack into this */
+    /* the stack will not be free */
+    if(unlikely(stack_size(stack) > deque_freeSize(this))){
         /* init fail */
         return -1;
     }
-    Elem *data = this->data, *source = list->data;
-    size_t index = list->index, rear = this->rear, maxsize = this->maxsize;
+    Elem *data = this->data, *source = stack->data;
+    size_t index = stack->size, rear = this->rear, maxsize = this->maxsize;
     for(int i = 0; i < index; i++){
         data[(rear + i + 1) % maxsize] = source[i];
     }
@@ -41,8 +42,8 @@ int rlist_appendList(RList * const this, List const*const list){
     return 0;
 }
 
-int rlist_appendLeft(RList * const this, Elem const elem){
-    if(unlikely(rlist_isFull(this))){
+int deque_appendLeft(Deque * const this, Elem const elem){
+    if(unlikely(deque_isFull(this))){
         // append fail
         return 0;
     }
@@ -54,8 +55,8 @@ int rlist_appendLeft(RList * const this, Elem const elem){
     return 1;
 }
 
-int rlist_appendRight(RList * const this, Elem const elem){
-    if(unlikely(rlist_isFull(this))){
+int deque_appendRight(Deque * const this, Elem const elem){
+    if(unlikely(deque_isFull(this))){
         // append fail
         return 0;
     }
@@ -66,8 +67,8 @@ int rlist_appendRight(RList * const this, Elem const elem){
     return 1;
 }
 
-int rlist_popLeft(RList * const this, Elem *const buf){
-    if(unlikely(rlist_isEmpty(this))){
+int deque_popLeft(Deque * const this, Elem *const buf){
+    if(unlikely(deque_isEmpty(this))){
         // pop fail
         return 0;
     }
@@ -77,8 +78,8 @@ int rlist_popLeft(RList * const this, Elem *const buf){
     return 1;
 }
 
-int rlist_popRight(RList *const this, Elem *const buf){
-    if(unlikely(rlist_isEmpty(this))){
+int deque_popRight(Deque *const this, Elem *const buf){
+    if(unlikely(deque_isEmpty(this))){
         // pop fail
         return 0;
     }
@@ -90,9 +91,9 @@ int rlist_popRight(RList *const this, Elem *const buf){
     return 1;
 }
 
-int rlist_get(RList const * const this, Elem *const buf, size_t const index, int const reversed){
+int deque_get(Deque const * const this, Elem *const buf, size_t const index, int const reversed){
     size_t size = this->size;
-    if(unlikely(index > size)){
+    if(unlikely(index >= size)){
         // get fail
         return 0;
     }
@@ -102,7 +103,7 @@ int rlist_get(RList const * const this, Elem *const buf, size_t const index, int
     return 1;
 }
 
-//int rlist_getLeft(RList const * const this, size_t index, Elem *buf){
+//int deque_getLeft(Deque const * const this, size_t index, Elem *buf){
 //    // get elem from left
 //    // index from 0 to (rear - front -1) % maxsize
 //    size_t get_index = (this->front + index) % (this->maxsize);
@@ -114,7 +115,7 @@ int rlist_get(RList const * const this, Elem *const buf, size_t const index, int
 //    return 1;
 //}
 //
-//int rlist_getRight(RList const * const this, size_t index, Elem *buf){
+//int deque_getRight(Deque const * const this, size_t index, Elem *buf){
 //    // get elem from right
 //    // index from 0 to (q->rear - q->front -1) % q->maxsize
 //    size_t maxsize = this->maxsize;
@@ -127,9 +128,9 @@ int rlist_get(RList const * const this, Elem *const buf, size_t const index, int
 //    return 1;
 //}
 
-void rlist_display(RList const * const this){
-    if(unlikely(rlist_isEmpty(this))){
-        printf("The rlist is empty");
+void deque_display(Deque const * const this){
+    if(unlikely(deque_isEmpty(this))){
+        printf("The deque is empty");
         return ;
     }
     printf("Left -> ");
@@ -141,19 +142,25 @@ void rlist_display(RList const * const this){
     printf("Right\n");
 }
 
-void rlist_delete(RList * this){
+void deque_delete(Deque * this){
     free(this->data);
     free(this);
 }
 
-//int rlist_link(RList *this, RList *other){
+void deque_raii(Deque **this){
+//    printf("deque_raii\n");
+    deque_delete(*this);
+    *this = NULL;
+}
+
+//int deque_link(Deque *this, Deque *other){
 //    /* link other after this */
 //    if(this->rear < this->front){
 //        /* the right end of this is filled */
 //        return -1;
 //    }
 //
-//    if(rlist_size(this) + rlist_size(other) > this->maxsize){
+//    if(deque_size(this) + deque_size(other) > this->maxsize){
 //        this->data = realloc(
 //                this->data,
 //                sizeof(Elem) * (this->maxsize + other->maxsize + 1)

@@ -2,7 +2,6 @@
 
 #include <malloc.h>
 
-#include "../include/data.h"
 #include "../include/heap.h"
 #include "../include/huffman.h"
 
@@ -21,7 +20,7 @@ void huffman_delete(HuffmanTree * const this){
     free(this);
 }
 
-int _cmp(Elem const e0, Elem const e1){
+int huffman_cmp(Elem const e0, Elem const e1){
     HuffmanNode *node0 = (HuffmanNode *)e0.ptr;
     HuffmanNode *node1 = (HuffmanNode *)e1.ptr;
     return node0->weight < node1->weight;
@@ -63,7 +62,7 @@ HuffmanTree* huffman_new(
 #endif
     }
 
-    Heap *heap = heap_new(length, _cmp);
+    Heap *heap = heap_new(length, huffman_cmp);
     /* heap of HuffmanNode */
     if(heap == NULL){
         goto fail1;
@@ -122,9 +121,10 @@ void _huffman_display(HuffmanNode const * const node, int depth){
     if(node == NULL){
         return;
     }
-    for(int i = 0; i < depth; i++){
-        printf("  ");
+    for(int i = 0; i < depth - 1; i++){
+        printf("| ");
     }
+    printf("- ");
     if(node->is_leaf)
         printf("%c %lf\n", node->data.str, node->weight);
     else{

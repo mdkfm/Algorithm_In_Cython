@@ -1,5 +1,5 @@
-#ifndef ALL_C_LINK_LIST_H
-#define ALL_C_LINK_LIST_H
+#ifndef ALL_C_LINK_H
+#define ALL_C_LINK_H
 #include "data.h"
 #include "gnuc.h"
 
@@ -15,7 +15,7 @@ typedef struct Link{
     size_t length;
 } Link;
 
-__malloc Link* link_new();
+__malloc Link*const link_new();
 size_t link_appendList(Link * const this, Elem const * const list, size_t const length, int const reversed);
 void link_delete(Link *this);
 

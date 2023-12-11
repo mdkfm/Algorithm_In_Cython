@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include "../include/tree.h"
 
+#define GRAPHADJ_DEBUG 0
 /* TODO: refactor three search function */
 
 __malloc treeNode *tree_newNode(){
@@ -11,15 +12,17 @@ __malloc treeNode *tree_newNode(){
         /* malloc fail */
         return NULL;
     }
+    node->pre = NULL;
+    node->next = NULL;
+    node->parent = NULL;
+    node->firstchild = NULL;
     node->sibling = 0;
     return node;
 }
 
-
 __malloc Tree *tree_new(){
     /* create an empty tree */
-    Tree *node;
-    node = (Tree *)malloc(sizeof(Tree));
+    Tree *node = (Tree *)malloc(sizeof(Tree));
     if(node == NULL){
         /* malloc fail */
         return NULL;
@@ -29,39 +32,69 @@ __malloc Tree *tree_new(){
     return node;
 }
 
+void tree_deleteNode(treeNode *node){
+    /* delete a node */
+    free(node);
+}
+
+void tree_delete(Tree* this){
+    /* delete a tree */
+    treeNode *node = this->root;
+    while(node != NULL){
+        treeNode *tmp = node->next;
+        tree_deleteNode(node);
+        node = tmp;
+    }
+    free(this);
+}
+
+void tree_raii(Tree **this){
+    /* RAII for tree */
+    tree_delete(*this);
+    *this = NULL;
+}
+
 int tree_setLink(Tree *tree){
     /* set the pre and next between different subtrees */
-    treeNode *node = tree->root, *child, *next;
-    RList *q = rlist_new(tree->size + 1);
+    RAII(deque_raii) Deque *q = deque_new(tree->size + 1);
     if(q == NULL){
-        return 0;
+        return -1;
     }
 
-    rlist_appendRight(q, (Elem)(void *) node);
-    while(! rlist_isEmpty(q)){
+#if GRAPHADJ_DEBUG
+    printf("In setting link\n");
+#endif
+
+    deque_appendRight(q, (Elem)(void *) tree->root);
+    while(! deque_isEmpty(q)){
         // get a node
-        Elem buf;
-        rlist_popLeft(q, &buf);
-        node = (treeNode *)buf.ptr;
-        
-        // push the child into queue
-        child = node->firstchild;
+        treeNode *node;
+        deque_popLeft(q, (Elem*)&node);
+        treeNode *child = node->firstchild;
         if(child != NULL){
-            rlist_appendRight(q, (Elem)(void *) child);
+            deque_appendRight(q, (Elem)(void *) child);
             while((child = child->next) != NULL){
-                rlist_appendRight(q, (Elem)(void *) child);
+                deque_appendRight(q, (Elem)(void *) child);
             }
         }
 
         // set pre and next link
-
-        if(rlist_get(q, &buf, 0, 0)){
-            next = (treeNode *)buf.ptr;
+        treeNode *next;
+#if GRAPHADJ_DEBUG
+        printf("Set link of %ld\n", node->data.num_int64);
+#endif
+        if(deque_get(q, (Elem *)&next, 0, 0)){
+#if GRAPHADJ_DEBUG
+            printf("next %ld\n", next->data.num_int64);
+#endif
             node->next = next;
             next->pre = node;
         }
+#if GRAPHADJ_DEBUG
+        printf("Set link of %ld end\n", node->data.num_int64);
+#endif
     }
-    return 1;
+    return 0;
 }
 
 // TODO: Graph struct
@@ -81,74 +114,83 @@ int tree_initFromAdj(Tree *tree, long **adj, Elem *value, int num){
     //     return -2;
     // }
 
-
-    treeNode *node, *child;
-    treeNode ** nodelist;
-    
     tree->size = num;
-    nodelist = (treeNode**)malloc(num * sizeof(treeNode*));
-    if(nodelist == NULL){
+
+    RAII(list_raii) List *nodelist = list_new(num);
+    if(unlikely(nodelist == NULL)){
         return -1;
     }
-
+#if GRAPHADJ_DEBUG
+    printf("Make nodes\n");
+#endif
     for(int i = 0; i < num; i++){
         /* create all nodes and write value */
-        nodelist[i] = tree_newNode();
-        if(nodelist[i] == NULL){
-            printf("Make node fail\n");
+        treeNode *tmp = tree_newNode();
+        if(unlikely(tmp == NULL)){
             goto fail;
         }
-        nodelist[i]->data = value[i];
+        tmp->data = value[i];
+        list_set(nodelist, i, (Elem)(void *)tmp);
     }
 
-    // set root
-    tree->root = nodelist[0];
-
     /* set the edges */
+#if GRAPHADJ_DEBUG
+    printf("Set edges\n");
+#endif
     for(int i = 0; i < num; i++){
-        node = nodelist[i];
+        treeNode *node;
+        list_get(nodelist, i, (Elem*)&node);
         /* get the first child */
+        treeNode *child;
         int j;
         for(j = i + 1; j < num; j++){
-            if(adj[i][j] == 1){
-                node->firstchild = nodelist[j];
+            if(unlikely(adj[i][j] == 1)){
+                list_get(nodelist, j, (Elem *)&(node->firstchild));
                 child = node->firstchild;
                 break;
             }
         }
         /* set the next and sibling */
         for(; j < num; j++){
-            if(adj[i][j] == 1){
-                // set pre and next link
-                child->next = nodelist[j];
-                nodelist[j]->pre = child;
+            if(unlikely(adj[i][j] == 1)){
+                /* set pre and next link */
+                list_get(nodelist, j, (Elem *)&(child->next));
+                child->next->pre = child;
 
-                // set sibling
+                /* set sibling */
                 child->sibling = 1;
                 child = child->next;
             }
         }
     }
+#if GRAPHADJ_DEBUG
+    printf("Set link\n");
+#endif
+    /* set root */
+    list_get(nodelist, 0, (Elem *)&(tree->root));
     /* set the pre and next between different subtrees */
-    if(! tree_setLink(tree)){
-        printf("Set link fail\n");
+    if(unlikely(tree_setLink(tree) < 0)){
         goto fail;
     }
-    free(nodelist);
+#if GRAPHADJ_DEBUG
+    printf("Set link end\n");
+    printf("Init end\n");
+#endif
     return 0;
 
-    fail:
-        free(tree);
-        for(int i = 0; i < num; i++){
-            free(nodelist[i]);
-        }
-        free(nodelist);
-        return -1;
+fail:
+    /* manage the lifecycle of nodes separately */
+    for(int i = 0; i < num; i++){
+        treeNode *node;
+        list_get(nodelist, i, (Elem *)&node);
+        tree_deleteNode(node);
+    }
+    return -1;
 }
 
-void tree_preOrderSearch(treeNode const*const node, List *const q){
+void tree_preOrderSearch(treeNode const*const node, Stack *const q){
     if(node != NULL){
-        list_append(q, node->data);
+        stack_append(q, node->data);
         tree_preOrderSearch(node->firstchild, q);
         if(node->sibling){
             tree_preOrderSearch(node->next, q);
@@ -156,20 +198,20 @@ void tree_preOrderSearch(treeNode const*const node, List *const q){
     }
 }
 
-int tree_preOrder(Tree const*const tree, List *const buf){
+int tree_preOrder(Tree const*const tree, Stack *const buf){
     // the preorder of tree is corresponding to the preorder of bi-tree
 
-    if(unlikely(rlist_freeSize(buf) < tree->size)){
+    if(unlikely(stack_freeSize(buf) < tree->size)){
         return -1;
     }
     tree_preOrderSearch(tree->root, buf);
     return 0;
 }
 
-void tree_postOrderSearch(treeNode const*const node, List *const q){
+void tree_postOrderSearch(treeNode const*const node, Stack *const q){
     if(node != NULL){
         tree_postOrderSearch(node->firstchild, q);
-        list_append(q, node->data);
+        stack_append(q, node->data);
         // printf("%d\n", node->data);
         if(node->sibling){
             tree_postOrderSearch(node->next, q);
@@ -177,46 +219,46 @@ void tree_postOrderSearch(treeNode const*const node, List *const q){
     }
 }
 
-int tree_postOrder(Tree const*const tree, List *const buf){
+int tree_postOrder(Tree const*const tree, Stack *const buf){
     // the tree_postOrder of tree is corresponding to the inOrder of bi-tree
 
-    if(unlikely(rlist_freeSize(buf) < tree->size)){
+    if(unlikely(stack_freeSize(buf) < tree->size)){
         return -1;
     }
     tree_postOrderSearch(tree->root, buf);
     return 0;
 }
 
-void tree_rightPostOrderSearch(treeNode const*const node, List*const q){
+void tree_rightPostOrderSearch(treeNode const*const node, Stack*const q){
     if(node != NULL){
         tree_rightPostOrderSearch(node->firstchild, q);
         if(node->sibling){
             tree_rightPostOrderSearch(node->next, q);
         }
-        list_append(q, node->data);
+        stack_append(q, node->data);
         // printf("%d\n", node->data);
     }
 }
 
-int tree_rightPostOrder(Tree const*const tree, List *const buf){
+int tree_rightPostOrder(Tree const*const tree, Stack *const buf){
     // the right tree_postOrder of tree is corresponding to the tree_postOrder of bi-tree
 
-    if(unlikely(rlist_freeSize(buf) < tree->size)){
+    if(unlikely(stack_freeSize(buf) < tree->size)){
         return -1;
     }
     tree_rightPostOrderSearch(tree->root, buf);
     return 0;
 }
 
-int tree_levelOrder(Tree const*const tree, List *const buf){
+int tree_levelOrder(Tree const*const tree, Stack *const buf){
     // return a result queue
-    if(unlikely(rlist_freeSize(buf) < tree->size)){
+    if(unlikely(stack_freeSize(buf) < tree->size)){
         return -1;
     }
 
     treeNode* node = tree->root;
     while(node != NULL){
-        list_append(buf, node->data);
+        stack_append(buf, node->data);
         node = node->next;
     }
     return 0;

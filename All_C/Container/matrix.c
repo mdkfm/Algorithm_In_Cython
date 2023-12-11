@@ -29,17 +29,6 @@ void matrix_delete(Matrix *m){
     free(m);
 }
 
-static inline Elem matrix_get(Matrix *m, size_t row, size_t column){
-    row %= m->row;
-    column %= m->column;
-    return m->data[row * m->column + column];
-}
-
-static inline void matrix_set(Matrix *m, size_t row, size_t column, Elem value){
-    row %= m->row;
-    column %= m->column;
-    m->data[row * m->column + column] = value;
-}
 
 void matrix_init(Matrix * m, Elem source[m->row][m->column]){
     int i, j, row = m->row, column = m->column;

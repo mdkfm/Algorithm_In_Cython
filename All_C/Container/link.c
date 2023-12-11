@@ -3,7 +3,7 @@
 
 #include "../include/link.h"
 
-__malloc Link* link_new(){
+__malloc Link*const link_new(){
     Link *link = (Link*)malloc(sizeof(Link));
     if(link == NULL) return NULL;
 

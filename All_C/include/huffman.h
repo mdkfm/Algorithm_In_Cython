@@ -2,7 +2,8 @@
 
 #ifndef ALL_C_HUFFMAN_H
 #define ALL_C_HUFFMAN_H
-#include "../include/data.h"
+#include "data.h"
+#include "gnuc.h"
 
 typedef struct HuffmanNode{
     Elem data;
@@ -17,7 +18,7 @@ typedef struct HuffmanTree{
 } HuffmanTree;
 
 void huffman_delete(HuffmanTree * const this);
-HuffmanTree* huffman_new(Elem const * const list, double const * const weight, long unsigned const length);
+__malloc HuffmanTree* huffman_new(Elem const * const list, double const * const weight, long unsigned const length);
 void _huffman_display(HuffmanNode const * const node, int depth);
 void huffman_display(HuffmanTree const * const this);
 

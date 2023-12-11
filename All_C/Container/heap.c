@@ -7,7 +7,7 @@
 #define HEAP_DEBUG 0
 
 
-__malloc Heap* heap_new(size_t const maxsize, int (*cmp)(Elem const, Elem const)){
+__receive __malloc Heap*const heap_new(size_t const maxsize, int (*cmp)(Elem const, Elem const)){
     if(cmp == NULL){
         return NULL;
     }

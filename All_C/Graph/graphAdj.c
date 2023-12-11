@@ -1,19 +1,8 @@
 #include <string.h>
 
-#include "../include/rlist.h"
+#include "../include/graphAdj.h"
 
-#include "../include/matrix.h"
-#include "../include/tree.h"
-#include "../include/heap.h"
-
-typedef struct {
-    Matrix *adj; /* a double matrix, 0.0 for not connected */
-    size_t size;
-    int weighted; /* only positive weight */
-    int directed;
-} GraphAdj;
-
-GraphAdj *graphAdj_new(size_t size, int weighted, int directed){
+__malloc GraphAdj *graphAdj_new(size_t size, int weighted, int directed){
     if(size * size < size)
         // size_t overflow
         return NULL;
@@ -74,9 +63,15 @@ void graphAdj_delete(GraphAdj * m){
     free(m);
 }
 
+void graphAdj_raii(GraphAdj **this){
+//    printf("graphAdj_raii\n");
+    graphAdj_delete(*this);
+    *this = NULL;
+}
+
 /* TODO: Realize some graph algorithm */
 
-int graphAdj_DFS(GraphAdj *this, size_t start, Queue *buf){
+int graphAdj_DFS(GraphAdj *this, size_t start, Deque *buf){
     /* graphAdj_DFS from start */
     /* buf store the result */
 
@@ -92,43 +87,43 @@ int graphAdj_DFS(GraphAdj *this, size_t start, Queue *buf){
     }
 
     size_t size = this->size;
-    if(size > queue_freeSize(buf)){
+    if(size > deque_freeSize(buf)){
         /* buf is too small */
         return -3;
     }
 
     Matrix *adj = this->adj;
 
-    Queue *stack = queue_new(size);
+    RAII(deque_raii) Deque *stack = deque_new(size);
     if(stack == NULL) {
         return -2;
     }
 
-    int *visited = (int *)calloc(size, sizeof(int));
+    RAII(list_raii) List * visited = list_new(size);
     if(visited == NULL){
-        queue_delete(stack); /* stack is not NULL */
         return -2;
     }
 
-    queue_appendRight(stack, (Elem)start);
-    visited[start] = 1;
-    while(!queue_isEmpty(stack)){
+    deque_appendRight(stack, (Elem)start);
+    list_set(visited, start, (Elem){.num_int64 = 1});
+    while(!deque_isEmpty(stack)){
         size_t node;
-        queue_popRight(stack, (Elem *)&node);
-        queue_appendRight(buf, (Elem)node);
+        deque_popRight(stack, (Elem *)&node);
+        deque_appendRight(buf, (Elem)node);
         for(size_t i = 0; i < size; i++){
             int linked = matrix_get(adj, node, i).num_float64 > 0.0;
-            if(linked && !visited[i]){
-                queue_appendRight(stack, (Elem)i);
-                visited[i] = 1;
+            Elem visited_i;
+            list_get(visited, i, &visited_i);
+            if(linked && visited_i.num_int64 != 1){
+                deque_appendRight(stack, (Elem)i);
+                list_set(visited, i, (Elem){.num_int64 = 1});
             }
         }
     }
-    free(visited);
     return 0;
 }
 
-int graphAdj_BFS(GraphAdj *this, size_t start, Queue *buf){
+int graphAdj_BFS(GraphAdj *this, size_t start, Deque *buf){
     /* graphAdj_BFS from start */
     /* buf store the result */
 
@@ -142,45 +137,45 @@ int graphAdj_BFS(GraphAdj *this, size_t start, Queue *buf){
         return -1;
 
     size_t size = this->size;
-    if(size > buf->maxsize - queue_size(buf)){
+    if(size > buf->maxsize - deque_size(buf)){
         /* buf is too small */
         return -3;
     }
 
     Matrix *adj = this->adj;
 
-    Queue *queue = queue_new(size);
+    RAII(deque_raii) Deque *queue = deque_new(size);
     if(queue == NULL) {
         return -2;
     }
 
-    int *visited = (int *)calloc(size, sizeof(int));
+    RAII(list_raii) List * visited = list_new(size);
     if(visited == NULL){
-        queue_delete(queue); /* queue is not NULL */
         return -2;
     }
 
-    queue_appendRight(queue, (Elem)start);
-    visited[start] = 1;
-    while(!queue_isEmpty(queue)){
+    deque_appendRight(queue, (Elem)start);
+    list_set(visited, start, (Elem){.num_int64 = 1});
+    while(!deque_isEmpty(queue)){
         size_t node;
-        queue_popLeft(queue, (Elem *)&node);
-        queue_appendRight(buf, (Elem)node);
+        deque_popLeft(queue, (Elem *)&node);
+        deque_appendRight(buf, (Elem)node);
 
         for(size_t i = 0; i < size; i++){
             int linked = matrix_get(adj, node, i).num_float64 > 0.0;
-            if(linked && !visited[i]){
-                queue_appendRight(queue, (Elem)i);
-                visited[i] = 1;
+            Elem visited_i;
+            list_get(visited, i, &visited_i);
+            if(linked && visited_i.num_int64 != 1){
+                deque_appendRight(queue, (Elem)i);
+                list_set(visited, i, (Elem){.num_int64 = 1});
             }
         }
     }
 
-    free(visited);
     return 0;
 }
 
-int graphAdj_DFS_All(GraphAdj *this, Queue *buf){
+int graphAdj_DFS_All(GraphAdj *this, Deque *buf){
     /* graphAdj_DFS all nodes */
 
     /* error list:
@@ -189,28 +184,29 @@ int graphAdj_DFS_All(GraphAdj *this, Queue *buf){
      * buf is too small: -2 */
 
     size_t size = this->size;
-    if(size > queue_freeSize(buf)){
+    if(size > deque_freeSize(buf)){
         /* buf is too small */
         return -2;
     }
 
-    int *visited = (int *)calloc(size, sizeof(int));
+    RAII(list_raii) List * visited = list_new(size);
     if(visited == NULL){
         return -1;
     }
 
     for(size_t start = 0; start < size; start++){
-        if(visited[start]){
+        Elem visited_start;
+        list_get(visited, start, &visited_start);
+        if(visited_start.num_int64 == 1){
             continue;
         }
         graphAdj_DFS(this, start, buf);
     }
 
-    free(visited);
     return 0;
 }
 
-int graphAdj_BFS_All(GraphAdj *this, Queue *buf){
+int graphAdj_BFS_All(GraphAdj *this, Deque *buf){
     /* graphAdj_BFS all nodes */
 
     /* error list:
@@ -219,23 +215,24 @@ int graphAdj_BFS_All(GraphAdj *this, Queue *buf){
      * buf is too small: -2 */
 
     size_t size = this->size;
-    if(size > queue_freeSize(buf)){
+    if(size > deque_freeSize(buf)){
         /* buf is too small */
         return -2;
     }
 
-    int *visited = (int *)calloc(size, sizeof(int));
+    RAII(list_raii) List * visited = list_new(size);
     if(visited == NULL){
         return -1;
     }
 
     for(size_t start = 0; start < size; start++){
-        if(visited[start]){
+        Elem visited_start;
+        list_get(visited, start, &visited_start);
+        if(visited_start.num_int64 == 1){
             continue;
         }
         graphAdj_BFS(this, start, buf);
     }
 
-    free(visited);
     return 0;
 }
