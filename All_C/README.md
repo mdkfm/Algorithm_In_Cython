@@ -1,3 +1,27 @@
+# GNU C
+&emsp;&emsp;Head file `gnuc.h` is a collection of some useful macros of GNU C.
+
+## `RAII` and `auto_ptr`
+&emsp;&emsp;Macro `RAII(func)` is a package of `__attribute__((cleanup(func)))`.
+```c
+#define RAII(func) __attribute__((cleanup(func)))
+void free_func(class* ptr);
+RAII(free_func) class p;
+```
+when the variable `p` is out of scope, `free(&p)` will be called automatically.
+
+&emsp;&emsp;Macro `auto_ptr(class)` is `RAII(class##_raii) class##_class_ptr`.
+```c
+#define auto_ptr(class) RAII(class##_raii) class##_class_ptr
+
+typedef class * const class##_class_ptr;
+void class##_raii(class##_class_ptr *p);
+
+auto_ptr(class) p = malloc(sizeof(class));
+```
+where for `class` we should define a corresponding const pinter type 
+and realize the `class##_raii` function.
+
 # Basic containers
 ## Link
 &emsp;&emsp;`Link` is a bidirectional linked list.

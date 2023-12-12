@@ -1,8 +1,14 @@
 /* Created by skf on 23-12-1. */
 #include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
 
 #include "../include/data.h"
 #include "../include/heap.h"
+#include "../include/error.h"
 
 #define HEAP_DEBUG 0
 
@@ -14,10 +20,6 @@ __receive __malloc Heap*const heap_new(size_t const maxsize, int (*cmp)(Elem con
 
     Heap *this = (Heap *)malloc(sizeof(Heap));
     if(this == NULL){
-        return NULL;
-    }
-    if(cmp == NULL){
-        free(this);
         return NULL;
     }
     /* The first node is 0 */
@@ -44,7 +46,7 @@ static inline size_t heap_RIGHT(size_t const i){
     return ((i) << 1) + 2;
 }
 
-void heap_heapify(Heap * const this, size_t const start){
+void heap_heapifyFrom(Heap * const this, size_t const start){
     /* heapify the heap from start */
     Elem * const list = this->data;
     size_t const length = this->size;
@@ -66,11 +68,11 @@ void heap_heapify(Heap * const this, size_t const start){
         r = r < length ? r : node;
         Elem right = list[r];
 
-        int cond1 = cmp(left, max);
+        int cond1 = cmp(left, max) > 0;
         index = cond1 ? l : index;
         max = cond1 ? left : max;
 
-        int cond2 = cmp(right, max);
+        int cond2 = cmp(right, max) > 0;
         index = cond2 ? r : index;
         max = cond2 ? right : max;
 
@@ -84,6 +86,17 @@ void heap_heapify(Heap * const this, size_t const start){
     }
     /* the last write */
     list[node] = key;
+}
+
+void heap_heapify(Heap * const this){
+    size_t length = this->size;
+    for(size_t i = length / 2 - 1; ; i--){
+        heap_heapifyFrom(this, i);
+        if(unlikely(i == 0)) break;
+#if HEAP_DEBUG
+        heap_display(this);
+#endif
+    }
 }
 
 void heap_display(Heap const * const this){
@@ -100,7 +113,7 @@ void heap_display(Heap const * const this){
     printf("\n");
 }
 
-int heap_init(Heap * const this, Elem * const list, size_t const length){
+int heap_initFromList(Heap * const this, Elem * const list, size_t const length){
     if(length > this->maxsize){
         return -1;
     }
@@ -110,13 +123,27 @@ int heap_init(Heap * const this, Elem * const list, size_t const length){
     }
     this->size = length;
 
-    for(size_t i = length / 2 - 1; ; i--){
-        heap_heapify(this, i);
-        if(unlikely(i == 0)) break;
-#if HEAP_DEBUG
-        heap_display(this);
-#endif
+    heap_heapify(this);
+    return 0;
+}
+
+int heap_initFromStart(Heap * const this, void * const start, size_t const size, size_t const mem_num){
+    /* write a lot of increasing ptr into heap */
+    /* start: the start value */
+    /* size: the size of each element */
+    /* mem_num: the number of elements */
+    if(mem_num > this->maxsize){
+        return -1;
     }
+
+    Elem *data = this->data;
+    void *p = start; /* GNU C support void ptr calculation */
+    for(size_t i = 0; i < mem_num; i++, data++, p += size){
+        *data = (Elem){.ptr= p};
+    }
+    this->size = mem_num;
+
+    heap_heapify(this);
     return 0;
 }
 
@@ -125,31 +152,34 @@ void heap_delete(Heap * const this){
     free(this);
 }
 
-int heap_top(Heap const * const this, Elem * const buf){
-    if(unlikely(heap_isEmpty(this))){
-        return -1;
-    }
-    *buf = this->data[0];
-    return 0;
+void Heap_raii(Heap_class_ptr *ptr){
+    heap_delete(*ptr);
 }
 
-int heap_pop(Heap * const this, Elem * const buf){
+Elem heap_top(Heap const * const this){
     if(unlikely(heap_isEmpty(this))){
-        return -1;
+        raise_error("Heap is empty");
+    }
+    return this->data[0];
+}
+
+Elem heap_pop(Heap * const this){
+    if(unlikely(heap_isEmpty(this))){
+        raise_error("Heap is empty");
     }
 
     Elem * const list = this->data;
     size_t length = this->size;
 
-    *buf = list[0]; /* get the top element */
+    Elem result = list[0]; /* get the top element */
 
     /* move the last element to the top
      * and heapify the heap */
     list[0] = list[length - 1];
     this->size --;
-    heap_heapify(this, 0);
+    heap_heapifyFrom(this, 0);
 
-    return 0;
+    return result;
 }
 
 int heap_append(Heap * const this, Elem const key){

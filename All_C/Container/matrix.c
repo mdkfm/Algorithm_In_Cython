@@ -1,4 +1,7 @@
+#include <stdio.h>
+
 #include "../include/matrix.h"
+
 
 /* TODO: more usage similar with numpy */
 
@@ -39,3 +42,12 @@ void matrix_init(Matrix * m, Elem source[m->row][m->column]){
     }
 }
 
+void matrix_display(Matrix const * const m){
+    int i, j, row = m->row, column = m->column;
+    for(i = 0; i < row; i++){
+        for(j = 0; j < column; j++){
+            printf("%lf ", matrix_get(m, i, j).num_float64);
+        }
+        printf("\n");
+    }
+}

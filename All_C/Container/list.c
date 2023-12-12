@@ -2,9 +2,10 @@
 
 #include <stdio.h>
 #include <malloc.h>
-#include <string.h>
 #include "../include/list.h"
+#include "../include/error.h"
 
+#define LIST_NEW_DEBUG 0
 
 __malloc List *const list_new(size_t const length){
     List *new = (List *)malloc(sizeof(List));
@@ -17,7 +18,9 @@ __malloc List *const list_new(size_t const length){
         /* malloc fail */
         return NULL;
     }
-    memset(data, 0, length * sizeof(Elem));
+#if LIST_NEW_DEBUG
+    printf("malloc %lu bytes\n", length * sizeof(Elem));
+#endif
     new->data = data;
     new->length = length;
     new->step = 1;
@@ -52,12 +55,6 @@ void list_delete(List * this){
     free(this);
 }
 
-void list_raii(List **this){
-//    printf("list_raii\n");
-    list_delete(*this);
-    *this = NULL;
-}
-
 int list_set(List *const this, size_t const index, Elem const elem){
     /* set this->data[index] = elem */
     /* return 0 if success, -1 if fail */
@@ -70,16 +67,15 @@ int list_set(List *const this, size_t const index, Elem const elem){
     return 0;
 }
 
-int list_get(List const*const this, size_t const index, Elem *const buf){
+Elem list_get(List const*const this, size_t const index){
     /* get this->data[index] */
     /* return 0 if success, -1 if fail */
     if(unlikely(index >= this->length)){
         /* index out of range */
-        return -1;
+        raise_error("list_get: index out of range");
     }
     Elem *data = this->data + index * this->step;
-    *buf = *data;
-    return 0;
+    return *data;
 }
 
 static inline size_t slice_normalize(ListSlice *const slice, size_t const bound){

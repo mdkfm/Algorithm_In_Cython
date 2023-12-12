@@ -83,6 +83,9 @@ void link_delete(Link *this){
     free(this);
 }
 
+void Link_raii(Link_class_ptr *ptr){
+    link_delete(*ptr);
+}
 
 size_t link_toArray(Link const * const this, Elem * const buf ,size_t const length){
     /* length: output the length */

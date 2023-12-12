@@ -4,6 +4,8 @@
 #define ALL_C_DATA_H
 #include <stddef.h>
 
+#define INF 1e400
+
 typedef union Elem{
     long unsigned num_uint64;
     long num_int64;

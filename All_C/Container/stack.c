@@ -17,9 +17,8 @@ void stack_delete(Stack * this) {
     free(this);
 }
 
-void stack_raii(Stack **this) {
+void Stack_raii(Stack_class_ptr*this) {
     stack_delete(*this);
-    *this = NULL;
 }
 
 void stack_clear(Stack *const this) {

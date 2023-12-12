@@ -13,9 +13,11 @@ typedef struct Stack{
     Elem *data;
 } Stack;
 
+typedef Stack *const Stack_class_ptr;
+void Stack_raii(Stack_class_ptr*this);
+
 __malloc Stack*const stack_new(size_t const maxsize);
 void stack_delete(Stack * this);
-void stack_raii(Stack **this);
 void stack_clear(Stack *const this);
 
 int stack_init(Stack *const this, Elem const *const data, size_t const length);

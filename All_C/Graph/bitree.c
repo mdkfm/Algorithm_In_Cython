@@ -76,97 +76,97 @@ int initBiTree(BiTree *tree, int length, Elem list[length], int adj[length][leng
     return 1;
 }
 
-Queue *preOrder(BiTree *this){
+Deque *preOrder(BiTree *this){
     /* return a queue of preOrder */
-    Queue *visit = newQueue(this->size), *result= newQueue(this->size+1);
+    Deque *visit = deque_new(this->size), *result= deque_new(this->size+1);
     BTNode *node = this->root;
     if(node == NULL){
         /* empty tree */
-        deleteQueue(result);
-        deleteQueue(visit);
+        deque_delete(result);
+        deque_delete(visit);
         return NULL;
     }
 
     /* append root */
-    appendRight(visit, (Elem)(void *)node);
+    deque_appendRight(visit, (Elem)(void *)node);
 
-    while(!isEmpty(visit)){
+    while(!deque_isEmpty(visit)){
         /* pop a node */
-        popRight(visit, (Elem *)&node);
+        deque_popRight(visit, (Elem *)&node);
         /* get the data */
-        appendRight(result, node->data);
+        deque_appendRight(result, node->data);
 
         /* append the child, right first */
         if(node->rchild != NULL){
-            appendRight(visit, (Elem)(void *)node->rchild);
+            deque_appendRight(visit, (Elem)(void *)node->rchild);
         }
         if(node->lchild != NULL){
-            appendRight(visit, (Elem)(void *)node->lchild);
+            deque_appendRight(visit, (Elem)(void *)node->lchild);
         }
     }
-    deleteQueue(visit);
+    deque_delete(visit);
     return result;
 }
 
-Queue *inOrder(BiTree *this){
+Deque *inOrder(BiTree *this){
     /* return a queue of inOrder */
-    Queue *visit = newQueue(this->size), *result= newQueue(this->size);
+    Deque *visit = deque_new(this->size), *result= deque_new(this->size);
     BTNode *node = this->root, *lchild, *rchild, *last=NULL;
     if(node == NULL){
         /* empty tree */
-        deleteQueue(result);
-        deleteQueue(visit);
+        deque_delete(result);
+        deque_delete(visit);
         return NULL;
     }
 
     /* append root */
-    appendRight(visit, (Elem)(void *)node);
+    deque_appendRight(visit, (Elem)(void *)node);
 
-    while(!isEmpty(visit) || node != NULL){
-        getRight(visit, 0, (Elem *)&node);
+    while(!deque_isEmpty(visit) || node != NULL){
+        deque_get(visit, (Elem *)&node, 0, 1);
         lchild = node->lchild;
         rchild = node->rchild;
         if(lchild == NULL || (last != NULL && last == lchild)){
-            popRight(visit, (Elem *)&node);
-            appendRight(result, node->data);
-            appendRight(visit, (Elem)(void *)rchild);
+            deque_popRight(visit, (Elem *)&node);
+            deque_appendRight(result, node->data);
+            deque_appendRight(visit, (Elem)(void *)rchild);
             continue;
         }
-        appendRight(visit, (Elem)(void *)lchild);
+        deque_appendRight(visit, (Elem)(void *)lchild);
     }
-    deleteQueue(visit);
+    deque_delete(visit);
     return result;
 }
 
-Queue *postOrder(BiTree *this){
+Deque *postOrder(BiTree *this){
     /* return a queue of postOrder */
-    Queue *visit = newQueue(this->size), *result= newQueue(this->size);
+    Deque *visit = deque_new(this->size), *result= deque_new(this->size);
     BTNode *node = this->root, *rchild, *lchild, *last=NULL;
     if(node == NULL){
         /* empty tree */
-        deleteQueue(result);
-        deleteQueue(visit);
+        deque_delete(result);
+        deque_delete(visit);
         return NULL;
     }
 
     /* append root */
-    appendRight(visit, (Elem)(void *)node);
+    deque_appendRight(visit, (Elem)(void *)node);
 
-    while(!isEmpty(visit)){
+    while(!deque_isEmpty(visit)){
         /* get a node */
-        getRight(visit, 0, (Elem *)&node);
+        deque_get(visit, (Elem *)&node, 0, 1);
         rchild = node->rchild;
         lchild = node->lchild;
         if((lchild == NULL && rchild == NULL) || (last != NULL && (last == lchild || last == rchild))){
-            popRight(visit, (Elem *)&node);
-            appendRight(result, node->data);
+            deque_popRight(visit, (Elem *)&node);
+            deque_appendRight(result, node->data);
             last = node;
             continue;
         }
-        if(rchild != NULL) appendRight(visit, (Elem)(void*)rchild);
-        if(lchild != NULL) appendRight(visit, (Elem)(void*)lchild);
+        if(rchild != NULL) deque_appendRight(visit, (Elem)(void*)rchild);
+        if(lchild != NULL) deque_appendRight(visit, (Elem)(void*)lchild);
     }
-    deleteQueue(visit);
+    deque_delete(visit);
     return result;
 }
 
@@ -180,7 +180,7 @@ BTNode* mirror(BTNode *this){
     return this;
 }
 
-Queue* q_mirror(BiTree *this){
+Deque* q_mirror(BiTree *this){
     BTNode *node = this->root;
     this->root = mirror(node);
     return preOrder(this);
@@ -188,7 +188,7 @@ Queue* q_mirror(BiTree *this){
 
 
 int main(){
-    Queue *result;
+    Deque *result;
     Elem list[5] = {3, 9, 20, 15, 7};
     int adj[5][5] = {
         {0, 1, 1, 0, 0},
@@ -202,9 +202,9 @@ int main(){
     if(err == 1) printf("Init tree success!\n");
     
     result = preOrder(tree);
-    displayQueue(result);
+    deque_display(result);
     result = postOrder(tree);
-    displayQueue(result);
+    deque_display(result);
 
     Elem list1[5] = {1, 2, 3, 4, 5};
     int adj1[5][5] = {
@@ -217,9 +217,9 @@ int main(){
     tree = newBiTree();
     err = initBiTree(tree, 5, list1, adj1);
     result = preOrder(tree);
-    displayQueue(result);
+    deque_display(result);
     result = q_mirror(tree);
-    displayQueue(result);
+    deque_display(result);
 
     return 0;
 }

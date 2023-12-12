@@ -56,7 +56,7 @@ void tree_raii(Tree **this){
 
 int tree_setLink(Tree *tree){
     /* set the pre and next between different subtrees */
-    RAII(deque_raii) Deque *q = deque_new(tree->size + 1);
+    auto_ptr(Deque) q = deque_new(tree->size + 1);
     if(q == NULL){
         return -1;
     }
@@ -116,7 +116,7 @@ int tree_initFromAdj(Tree *tree, long **adj, Elem *value, int num){
 
     tree->size = num;
 
-    RAII(list_raii) List *nodelist = list_new(num);
+    auto_ptr(List) nodelist = list_new(num);
     if(unlikely(nodelist == NULL)){
         return -1;
     }

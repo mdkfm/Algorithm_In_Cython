@@ -13,6 +13,8 @@ typedef struct{
     Elem *data;
 } Deque;
 
+typedef Deque * const Deque_class_ptr;
+
 __receive __malloc Deque*const deque_new(size_t const maxsize);
 
 __receive Deque*const deque_transFromStack(Stack *list);
@@ -49,13 +51,13 @@ int deque_appendRight(Deque *const this, Elem const elem);
 int deque_popLeft(Deque *const this, Elem *const buf);
 int deque_popRight(Deque *const this, Elem *const buf);
 
-int deque_get(Deque const * const this, Elem *const buf, size_t const index, int const reversed);
+Elem  deque_get(Deque const * const this, size_t index);
 //int deque_getLeft(Deque const * const this, size_t index, Elem *buf);
 //int deque_getRight(Deque const * const this, size_t index, Elem *buf);
 
 void deque_display(Deque const * const this);
 void deque_delete(Deque * this);
-void deque_raii(Deque ** this);
+void Deque_raii(Deque_class_ptr *ptr);
 //int deque_link(Deque *this, Deque *other);
 
 #endif

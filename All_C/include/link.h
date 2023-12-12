@@ -15,6 +15,9 @@ typedef struct Link{
     size_t length;
 } Link;
 
+typedef Link *const Link_class_ptr;
+void Link_raii(Link_class_ptr *ptr);
+
 __malloc Link*const link_new();
 size_t link_appendList(Link * const this, Elem const * const list, size_t const length, int const reversed);
 void link_delete(Link *this);

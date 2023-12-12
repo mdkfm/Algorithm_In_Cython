@@ -1,6 +1,7 @@
 #include<stdio.h>
 
 #include "../include/deque.h"
+#include "../include/error.h"
 
 __receive __malloc Deque*const deque_new(size_t const maxsize){
     Deque *new = (Deque*)malloc(sizeof(Deque));
@@ -91,16 +92,13 @@ int deque_popRight(Deque *const this, Elem *const buf){
     return 1;
 }
 
-int deque_get(Deque const * const this, Elem *const buf, size_t const index, int const reversed){
-    size_t size = this->size;
-    if(unlikely(index >= size)){
-        // get fail
-        return 0;
+Elem deque_get(Deque const * const this, size_t const index){
+    if(unlikely(index >= this->size)){
+        raise_error("deque_get: index out of range");
     }
-    size_t get_index = (size + (reversed ? -index : index)) % size;
+    size_t get_index = index;
     get_index = (this->front + get_index) % this->maxsize;
-    *buf = this->data[get_index];
-    return 1;
+    return this->data[get_index];
 }
 
 //int deque_getLeft(Deque const * const this, size_t index, Elem *buf){
@@ -147,10 +145,9 @@ void deque_delete(Deque * this){
     free(this);
 }
 
-void deque_raii(Deque **this){
+void Deque_raii(Deque_class_ptr * ptr){
 //    printf("deque_raii\n");
-    deque_delete(*this);
-    *this = NULL;
+    deque_delete(*ptr);
 }
 
 //int deque_link(Deque *this, Deque *other){
