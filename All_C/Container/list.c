@@ -55,16 +55,15 @@ void list_delete(List * this){
     free(this);
 }
 
-int list_set(List *const this, size_t const index, Elem const elem){
+void list_set(List *const this, size_t const index, Elem const elem){
     /* set this->data[index] = elem */
     /* return 0 if success, -1 if fail */
     if(unlikely(index >= this->length)){
         /* index out of range */
-        return -1;
+        raise_error("list_get: index out of range", __FILE__, __func__, __LINE__);
     }
     Elem *data = this->data + index * this->step;
     *data = elem;
-    return 0;
 }
 
 Elem list_get(List const*const this, size_t const index){
@@ -72,7 +71,7 @@ Elem list_get(List const*const this, size_t const index){
     /* return 0 if success, -1 if fail */
     if(unlikely(index >= this->length)){
         /* index out of range */
-        raise_error("list_get: index out of range");
+        raise_error("list_get: index out of range", __FILE__, __func__, __LINE__);
     }
     Elem *data = this->data + index * this->step;
     return *data;

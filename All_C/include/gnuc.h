@@ -21,6 +21,4 @@
 #define __align_max __attribute__((aligned))
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
-#define RAII(func) __attribute__((cleanup(func)))
-#define auto_ptr(class) RAII(class##_raii) class##_class_ptr
 #endif //ALL_C_GNUC_H

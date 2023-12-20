@@ -22,20 +22,21 @@ int main(){
     RAII(tree_raii) Tree *tree = tree_new();
     tree_initFromAdj(tree, test, value, 6);
 
-    RAII(stack_raii) Stack* q1 = stack_new(6);
+    auto_ptr(Stack) q1 = stack_new(6);
     tree_preOrder(tree, q1);
     stack_display(q1);
 
-    RAII(stack_raii) Stack* q2 = stack_new(6);
+    auto_ptr(Stack) q2 = stack_new(6);
     tree_postOrder(tree, q2);
     stack_display(q2);
 
-    RAII(stack_raii) Stack* q3 = stack_new(6);
+    auto_ptr(Stack) q3 = stack_new(6);
     tree_rightPostOrder(tree, q3);
     stack_display(q3);
 
-    RAII(stack_raii) Stack* q4 = stack_new(6);
+    auto_ptr(Stack) q4 = stack_new(6);
     tree_levelOrder(tree, q4);
     stack_display(q4);
+
     return 0;
 }

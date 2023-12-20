@@ -1,9 +1,9 @@
 #include <stdexcept>
-#include "../List/queue.cpp"
+#include "../Container/deque.cpp"
 
 /* TODO: refactor to delete the template */
 
-template<long unsigned _node_num>
+template<size_t _node_num>
 class Graph{
 private:
     double _adj_matrix[_node_num][_node_num];
@@ -11,25 +11,25 @@ private:
     bool isRinged_undirected() const;
     bool invalid_check();
 public:
-    long unsigned const node_num;
+    size_t const node_num;
     bool const weighted;
     bool const directed;
     Graph(double adj_matrix[_node_num][_node_num], bool weighted, bool directed);
-    double get_edge(long unsigned a, long unsigned b) const;
-    void set_edge(long unsigned a, long unsigned b, double weight = 1.0);
-    Queue<long unsigned> DFS(long unsigned start) const;
-    Queue<long unsigned> DFS_All() const;
-    Queue<long unsigned> BFS(long unsigned start) const;
-    Queue<long unsigned> BFS_All() const;
-    Queue<long unsigned> topoSort() const;
+    double get_edge(size_t a, size_t b) const;
+    void set_edge(size_t a, size_t b, double weight = 1.0);
+    Deque<size_t> DFS(size_t start) const;
+    Deque<size_t> DFS_All() const;
+    Deque<size_t> BFS(size_t start) const;
+    Deque<size_t> BFS_All() const;
+    Deque<size_t> topoSort() const;
     bool isRinged() const;
 };
 
-template<long unsigned _node_num>
+template<size_t _node_num>
 Graph<_node_num>::Graph(double adj_matrix[_node_num][_node_num], bool weighted, bool directed):
 node_num(_node_num), weighted(weighted), directed(directed){
-    for(long unsigned i = 0; i < _node_num; i++){
-        for(long unsigned j = 0; j < _node_num; j++){
+    for(size_t i = 0; i < _node_num; i++){
+        for(size_t j = 0; j < _node_num; j++){
             this->_adj_matrix[i][j] = adj_matrix[i][j];
         }
     }
@@ -38,10 +38,10 @@ node_num(_node_num), weighted(weighted), directed(directed){
     }
 }
 
-template<long unsigned _node_num>
+template<size_t _node_num>
 bool Graph<_node_num>::invalid_check(){
-    for(long unsigned i = 0; i < _node_num; i++){
-        for(long unsigned j = 0; j < _node_num; j++){
+    for(size_t i = 0; i < _node_num; i++){
+        for(size_t j = 0; j < _node_num; j++){
             double weight = _adj_matrix[i][j];
             if(weight < 0) return false;
             if(i == j && weight != 0.0) return false;
@@ -51,13 +51,13 @@ bool Graph<_node_num>::invalid_check(){
     return true;
 }
 
-template<long unsigned _node_num>
-double Graph<_node_num>::get_edge(long unsigned a, long unsigned b) const{
+template<size_t _node_num>
+double Graph<_node_num>::get_edge(size_t a, size_t b) const{
     return _adj_matrix[a][b];
 }
 
-template<long unsigned _node_num>
-void Graph<_node_num>::set_edge(long unsigned a, long unsigned b, double weight){
+template<size_t _node_num>
+void Graph<_node_num>::set_edge(size_t a, size_t b, double weight){
     /* set edge from a to b, with weight, if weight is not given, set to 1.0 */
     /* if weight = 0, delete the edge */
     if(a == b) throw(std::invalid_argument("self-self edge is not allowed"));
@@ -67,17 +67,17 @@ void Graph<_node_num>::set_edge(long unsigned a, long unsigned b, double weight)
     _adj_matrix[b][a] = directed ? _adj_matrix[b][a] : weight;
 }
 
-template<long unsigned _node_num>
-Queue<long unsigned> Graph<_node_num>::DFS(long unsigned start) const{
+template<size_t _node_num>
+Deque<size_t> Graph<_node_num>::DFS(size_t start) const{
     /* DFS from start */
-    Queue<long unsigned> result(_node_num), stack(_node_num);
+    Deque<size_t> result(_node_num), stack(_node_num);
     bool visited[_node_num] = {false};
     stack.appendRight(start);
     visited[start] = true;
     while(!stack.isEmpty()){
-        long unsigned node = stack.popRight();
+        size_t node = stack.popRight();
         result.appendRight(node);
-        for(long unsigned i = 0; i < _node_num; i++){
+        for(size_t i = 0; i < _node_num; i++){
             if(_adj_matrix[node][i] != 0.0 && !visited[i]){
                 stack.appendRight(i);
                 visited[i] = true;
@@ -87,19 +87,19 @@ Queue<long unsigned> Graph<_node_num>::DFS(long unsigned start) const{
     return result;
 }
 
-template<long unsigned _node_num>
-Queue<long unsigned> Graph<_node_num>::DFS_All() const{
+template<size_t _node_num>
+Deque<size_t> Graph<_node_num>::DFS_All() const{
     /* DFS all nodes, also for not linked graph */
-    Queue<long unsigned> result(_node_num), stack(_node_num);
+    Deque<size_t> result(_node_num), stack(_node_num);
     bool visited[_node_num] = {false};
-    for(long unsigned i = 0; i < _node_num; i++){
+    for(size_t i = 0; i < _node_num; i++){
         if(visited[i]) continue;
         stack.appendRight(i);
         visited[i] = true;
         while(!stack.isEmpty()){
-            long unsigned node = stack.popRight();
+            size_t node = stack.popRight();
             result.appendRight(node);
-            for(long unsigned j = 0; j < _node_num; j++){
+            for(size_t j = 0; j < _node_num; j++){
                 if(_adj_matrix[node][j] != 0.0 && !visited[j]){
                     stack.appendRight(j);
                     visited[j] = true;
@@ -110,17 +110,17 @@ Queue<long unsigned> Graph<_node_num>::DFS_All() const{
     return result;
 }
 
-template<long unsigned _node_num>
-Queue<long unsigned> Graph<_node_num>::BFS(long unsigned start) const{
+template<size_t _node_num>
+Deque<size_t> Graph<_node_num>::BFS(size_t start) const{
     /* BFS from start */
-    Queue<long unsigned> result(_node_num), queue(_node_num);
+    Deque<size_t> result(_node_num), queue(_node_num);
     bool visited[_node_num] = {false};
     queue.appendRight(start);
     visited[start] = true;
     while(!queue.isEmpty()){
-        long unsigned node = queue.popLeft();
+        size_t node = queue.popLeft();
         result.appendRight(node);
-        for(long unsigned i = 0; i < _node_num; i++){
+        for(size_t i = 0; i < _node_num; i++){
             if(_adj_matrix[node][i] != 0.0 && !visited[i]){
                 queue.appendRight(i);
                 visited[i] = true;
@@ -130,19 +130,19 @@ Queue<long unsigned> Graph<_node_num>::BFS(long unsigned start) const{
     return result;
 }
 
-template<long unsigned _node_num>
-Queue<long unsigned> Graph<_node_num>::BFS_All() const{
+template<size_t _node_num>
+Deque<size_t> Graph<_node_num>::BFS_All() const{
     /* BFS all nodes, also for not linked graph */
-    Queue<long unsigned> result(_node_num), queue(_node_num);
+    Deque<size_t> result(_node_num), queue(_node_num);
     bool visited[_node_num] = {false};
-    for(long unsigned i = 0; i < _node_num; i++){
+    for(size_t i = 0; i < _node_num; i++){
         if(visited[i]) continue;
         queue.appendRight(i);
         visited[i] = true;
         while(!queue.isEmpty()){
-            long unsigned node = queue.popLeft();
+            size_t node = queue.popLeft();
             result.appendRight(node);
-            for(long unsigned j = 0; j < _node_num; j++){
+            for(size_t j = 0; j < _node_num; j++){
                 if(_adj_matrix[node][j] != 0.0 && !visited[j]){
                     queue.appendRight(j);
                     visited[j] = true;
@@ -154,30 +154,30 @@ Queue<long unsigned> Graph<_node_num>::BFS_All() const{
     return result;
 }
 
-template<long unsigned _node_num>
-Queue<long unsigned> Graph<_node_num>::topoSort() const{
+template<size_t _node_num>
+Deque<size_t> Graph<_node_num>::topoSort() const{
     /* Topological sort */
     if(!directed) throw std::domain_error("TopoSort is only for directed graph");
 
-    Queue<long unsigned> result(_node_num), queue(_node_num);
-    long unsigned in_degree[_node_num] = {0};
+    Deque<size_t> result(_node_num), queue(_node_num);
+    size_t in_degree[_node_num] = {0};
     /* calculate in degree */
-    for(long unsigned i = 0; i < _node_num; i++){
-        for(long unsigned j = 0; j < _node_num; j++){
+    for(size_t i = 0; i < _node_num; i++){
+        for(size_t j = 0; j < _node_num; j++){
             if(_adj_matrix[i][j] != 0.0) in_degree[j]++;
         }
     }
     /* push node with in degree 0 into queue */
-    for(long unsigned i = 0; i < _node_num; i++){
+    for(size_t i = 0; i < _node_num; i++){
         if(in_degree[i] == 0) queue.appendRight(i);
     }
     /* pop node from queue, push into result, and decrease in degree of its child */
     while(!queue.isEmpty()){
-        long unsigned node = queue.popLeft();
+        size_t node = queue.popLeft();
         result.appendRight(node);
-        for(long unsigned i = 0; i < _node_num; i++){
+        for(size_t i = 0; i < _node_num; i++){
             if(_adj_matrix[node][i] != 0.0){
-                long unsigned degree = --in_degree[i];
+                size_t degree = --in_degree[i];
                 if(degree == 0) queue.appendRight(i);
             }
         }
@@ -186,21 +186,21 @@ Queue<long unsigned> Graph<_node_num>::topoSort() const{
     return result;
 }
 
-template<long unsigned _node_num>
+template<size_t _node_num>
 bool Graph<_node_num>::isRinged_undirected() const{
     /* In DFS, if a node is visited twice, then the graph is ringed */
     bool visited[_node_num] = {false};
     /* for not directed, we need to save the parent */
     struct _node{
-        long unsigned node;
-        long unsigned parent;
+        size_t node;
+        size_t parent;
     };
-    Queue<_node> stack(_node_num);
+    Deque<_node> stack(_node_num);
     stack.appendRight(_node{0, 0});
     visited[0] = true;
     while(!stack.isEmpty()){
         _node node = stack.popRight();
-        for(long unsigned i = 0; i < _node_num; i++){
+        for(size_t i = 0; i < _node_num; i++){
             if(_adj_matrix[node.node][i] != 0.0){
                 if(visited[i]){
                     /* if there is an edge with visited node but not its parent, then it is ringed */
@@ -216,16 +216,16 @@ bool Graph<_node_num>::isRinged_undirected() const{
     return false;
 }
 
-template<long unsigned _node_num>
+template<size_t _node_num>
 bool Graph<_node_num>::isRinged_directed() const{
     /* In DFS, if a node is visited twice, then the graph is ringed */
     bool visited[_node_num] = {false};
-    Queue<long unsigned> stack(_node_num);
+    Deque<size_t> stack(_node_num);
     stack.appendRight(0);
     visited[0] = true;
     while(!stack.isEmpty()){
-        long unsigned node = stack.popRight();
-        for(long unsigned i = 0; i < _node_num; i++) {
+        size_t node = stack.popRight();
+        for(size_t i = 0; i < _node_num; i++) {
             if (_adj_matrix[node][i] != 0.0) {
                 if (visited[i]) return true;
                 /* else push into stack, and set the parent */
@@ -237,7 +237,7 @@ bool Graph<_node_num>::isRinged_directed() const{
     return false;
 }
 
-template<long unsigned _node_num>
+template<size_t _node_num>
 bool Graph<_node_num>::isRinged() const{
     /* check whether the graph is ringed */
     /* In DFS, if a node is visited twice, then the graph is ringed */
@@ -254,8 +254,8 @@ int main(){
         {0, 1, 0, 1, 0}
     };
     Graph<5> graph(adj_matrix, false, false);
-    Queue<long unsigned> result = graph.DFS_All();
-    for(long unsigned i = 0; i < 5; i++){
+    Deque<size_t> result = graph.DFS_All();
+    for(size_t i = 0; i < 5; i++){
         std::cout << result.popLeft() << " ";
     }
     std::cout << std::endl;

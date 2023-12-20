@@ -68,7 +68,7 @@ HuffmanTree* huffman_new(
         goto fail1;
     }
 
-    heap_init(heap, (Elem *)node_list, length);
+    heap_initFromList(heap, (Elem *)node_list, length);
     while(heap->size > 1){
         /* malloc a new non leaf node */
         HuffmanNode *node = (HuffmanNode *)malloc(sizeof(HuffmanNode));
@@ -76,10 +76,9 @@ HuffmanTree* huffman_new(
             goto fail2;
         }
         node->is_leaf = 0;
-        HuffmanNode *left, *right;
 
-        heap_pop(heap, (Elem *)&left);
-        heap_pop(heap, (Elem *)&right);
+        HuffmanNode *left = (HuffmanNode *)heap_pop(heap).ptr;
+        HuffmanNode *right = (HuffmanNode *)heap_pop(heap).ptr;
         node->left = left;
         node->right = right;
 #if NEW_DEBUG
@@ -90,8 +89,7 @@ HuffmanTree* huffman_new(
         node->weight = left->weight + right->weight;
         heap_append(heap, (Elem)(void *)node);
     }
-    HuffmanNode *root;
-    heap_pop(heap, (Elem *)&root);
+    HuffmanNode *root = (HuffmanNode *)heap_pop(heap).ptr;
     this->root = root;
     heap_delete(heap);
     return this;
@@ -100,8 +98,7 @@ HuffmanTree* huffman_new(
     fail2:;
     long unsigned size = heap->size;
     while(size > 0){
-        HuffmanNode *node;
-        heap_pop(heap, (Elem *)&node);
+        HuffmanNode *node = (HuffmanNode *)heap_pop(heap).ptr;
         _huffman_delete(node);
         size--;
     }

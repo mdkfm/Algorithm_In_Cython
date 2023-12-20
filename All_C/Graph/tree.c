@@ -79,11 +79,11 @@ int tree_setLink(Tree *tree){
         }
 
         // set pre and next link
-        treeNode *next;
+        treeNode *next = (treeNode *)deque_get(q, 0).ptr;
 #if GRAPHADJ_DEBUG
         printf("Set link of %ld\n", node->data.num_int64);
 #endif
-        if(deque_get(q, (Elem *)&next, 0, 0)){
+        if(next != NULL){
 #if GRAPHADJ_DEBUG
             printf("next %ld\n", next->data.num_int64);
 #endif
@@ -138,15 +138,14 @@ int tree_initFromAdj(Tree *tree, long **adj, Elem *value, int num){
     printf("Set edges\n");
 #endif
     for(int i = 0; i < num; i++){
-        treeNode *node;
-        list_get(nodelist, i, (Elem*)&node);
+        treeNode *node = (treeNode *)list_get(nodelist, i).ptr;
         /* get the first child */
         treeNode *child;
         int j;
         for(j = i + 1; j < num; j++){
             if(unlikely(adj[i][j] == 1)){
-                list_get(nodelist, j, (Elem *)&(node->firstchild));
-                child = node->firstchild;
+                child = (treeNode *)list_get(nodelist, j).ptr;
+                node->firstchild = child;
                 break;
             }
         }
@@ -154,12 +153,13 @@ int tree_initFromAdj(Tree *tree, long **adj, Elem *value, int num){
         for(; j < num; j++){
             if(unlikely(adj[i][j] == 1)){
                 /* set pre and next link */
-                list_get(nodelist, j, (Elem *)&(child->next));
-                child->next->pre = child;
+                treeNode * next = (treeNode *)list_get(nodelist, j).ptr;
+                child->next = next;
+                next->pre = child;
 
                 /* set sibling */
                 child->sibling = 1;
-                child = child->next;
+                child = next;
             }
         }
     }
@@ -167,7 +167,7 @@ int tree_initFromAdj(Tree *tree, long **adj, Elem *value, int num){
     printf("Set link\n");
 #endif
     /* set root */
-    list_get(nodelist, 0, (Elem *)&(tree->root));
+    tree->root = (treeNode *)list_get(nodelist, 0).ptr;
     /* set the pre and next between different subtrees */
     if(unlikely(tree_setLink(tree) < 0)){
         goto fail;
@@ -181,8 +181,7 @@ int tree_initFromAdj(Tree *tree, long **adj, Elem *value, int num){
 fail:
     /* manage the lifecycle of nodes separately */
     for(int i = 0; i < num; i++){
-        treeNode *node;
-        list_get(nodelist, i, (Elem *)&node);
+        treeNode *node = (treeNode *)list_get(nodelist, i).ptr;
         tree_deleteNode(node);
     }
     return -1;

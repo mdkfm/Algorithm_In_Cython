@@ -30,7 +30,7 @@ typedef struct ListSlice{
 __used __malloc List *const list_new(size_t const length);
 void list_delete(List * this);
 
-int list_set(List *const this, size_t const index, Elem const elem);
+void list_set(List *const this, size_t const index, Elem const elem);
 Elem list_get(List const*const this, size_t const index);
 int list_write(List *const this, ListSlice const slice, Elem *const array, size_t const length);
 List* list_view(List *const this, ListSlice slice);

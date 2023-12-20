@@ -17,10 +17,6 @@ void stack_delete(Stack * this) {
     free(this);
 }
 
-void Stack_raii(Stack_class_ptr*this) {
-    stack_delete(*this);
-}
-
 void stack_clear(Stack *const this) {
     this->size = 0;
 }
