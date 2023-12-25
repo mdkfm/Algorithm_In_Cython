@@ -162,27 +162,27 @@ int graphAdj_DFS(GraphAdj *this, size_t start, Deque *buf){
 
     Matrix *adj = this->adj;
 
-    auto_ptr(Deque) stack = deque_new(size);
+    auto_ptr(Deque) stack = deque_new(size, sizeof(size_t), NULL);
     auto_ptr(List) visited = list_new(size);
     if(unlikely(stack == NULL || visited == NULL)) {
         return -2;
     }
 
-    deque_appendRight(stack, (Elem)start);
+    deque_appendRight(stack, tmp_mptr((size_t)start));
     list_set(visited, start, (Elem){.num_int64 = 1});
 
     while(!deque_isEmpty(stack)){
-        size_t node;
-        deque_popRight(stack, (Elem *)&node);
+        auto_ptr(Monad) node = deque_popRight(stack);
 #if GRAPHADJ_DFS_DEBUG
         printf("%ld ", node);
 #endif
-        deque_appendRight(buf, (Elem)node);
+        deque_appendRight(buf, node);
+        size_t node_i = *(size_t *)node->data;
         for(size_t i = 0; i < size; i++){
-            int linked = matrix_get(adj, node, i).num_float64 > 0.0;
+            int linked = matrix_get(adj, node_i, i).num_float64 > 0.0;
             long visited_i = list_get(visited, i).num_int64;
             if(linked && visited_i != 1){
-                deque_appendRight(stack, (Elem)i);
+                deque_appendRight(stack, tmp_mptr((size_t)i));
                 list_set(visited, i, (Elem){.num_int64 = 1});
             }
         }
@@ -211,7 +211,7 @@ int graphAdj_BFS(GraphAdj *this, size_t start, Deque *buf){
 
     Matrix *adj = this->adj;
 
-    auto_ptr(Deque) queue = deque_new(size);
+    auto_ptr(Deque) queue = deque_new(size, sizeof(size_t), NULL);
     if(unlikely(queue == NULL)) {
         return -2;
     }
@@ -221,18 +221,17 @@ int graphAdj_BFS(GraphAdj *this, size_t start, Deque *buf){
         return -2;
     }
 
-    deque_appendRight(queue, (Elem)start);
+    deque_appendRight(queue, tmp_mptr((size_t)start));
     list_set(visited, start, (Elem){.num_int64 = 1});
     while(!deque_isEmpty(queue)){
-        size_t node;
-        deque_popLeft(queue, (Elem *)&node);
-        deque_appendRight(buf, (Elem)node);
-
+        auto_ptr(Monad) node = deque_popLeft(queue);
+        deque_appendRight(buf, node);
+        size_t node_i = *(size_t *)node->data;
         for(size_t i = 0; i < size; i++){
-            int linked = matrix_get(adj, node, i).num_float64 > 0.0;
+            int linked = matrix_get(adj, node_i, i).num_float64 > 0.0;
             long visited_i = list_get(visited, i).num_int64;
             if(linked && visited_i != 1){
-                deque_appendRight(queue, (Elem)i);
+                deque_appendRight(queue, tmp_mptr((size_t)i));
                 list_set(visited, i, (Elem){.num_int64 = 1});
             }
         }
@@ -264,23 +263,23 @@ int graphAdj_DFSVisited(GraphAdj *this, size_t start, Deque *buf, List *visited)
 
     Matrix *adj = this->adj;
 
-    auto_ptr(Deque) stack = deque_new(size);
+    auto_ptr(Deque) stack = deque_new(size, sizeof(size_t), NULL);
     if(unlikely(stack == NULL)) {
         return -2;
     }
 
-    deque_appendRight(stack, (Elem)start);
+    deque_appendRight(stack, tmp_mptr((size_t)start));
     list_set(visited, start, (Elem){.num_int64 = 1});
 
     while(!deque_isEmpty(stack)){
-        size_t node;
-        deque_popRight(stack, (Elem *)&node);
-        deque_appendRight(buf, (Elem)node);
+        auto_ptr(Monad) node = deque_popRight(stack);
+        deque_appendRight(buf, node);
+        size_t node_i = *(size_t *)node->data;
         for(size_t i = 0; i < size; i++){
-            int linked = matrix_get(adj, node, i).num_float64 > 0.0;
+            int linked = matrix_get(adj, node_i, i).num_float64 > 0.0;
             long visited_i = list_get(visited, i).num_int64;
             if(linked && visited_i != 1){
-                deque_appendRight(stack, (Elem)i);
+                deque_appendRight(stack, tmp_mptr((size_t)i));
                 list_set(visited, i, (Elem){.num_int64 = 1});
             }
         }
@@ -371,7 +370,7 @@ int graphAdj_isConnected(GraphAdj *this){
         return -2;
     }
     size_t size = this->size;
-    auto_ptr(Deque) buf = deque_new(size);
+    auto_ptr(Deque) buf = deque_new(size, sizeof(size_t), NULL);
     if(buf == NULL){
         return -1;
     }
@@ -485,9 +484,9 @@ typedef struct _GraphAdj_edge{
     double weight;
 } GraphAdj_edge;
 
-int _graphAdj_cmp(Elem e0, Elem e1){
-    GraphAdj_edge *n0 = (GraphAdj_edge *)e0.ptr;
-    GraphAdj_edge *n1 = (GraphAdj_edge *)e1.ptr;
+int _graphAdj_cmp(Block const*const this, size_t const index0, size_t const index1){
+    GraphAdj_edge *n0 = (GraphAdj_edge *)block_getPtr(this, index0);
+    GraphAdj_edge *n1 = (GraphAdj_edge *)block_getPtr(this, index1);
     return n0->weight < n1->weight ? 1 : (n0->weight > n1->weight ? -1 : 0);
 }
 
@@ -512,44 +511,39 @@ __malloc  GraphAdj * graphAdj_Kruskal(GraphAdj const*const this){
     Matrix * new_adj = new->adj;
 
     auto_ptr(UFSTree) tree = ufsTree_new(size);
-    auto_ptr(Heap) heap = heap_new(size * size, _graphAdj_cmp);
+    size_t edge_num = this->edge_num;
+    auto_ptr(Heap) heap = heap_new(edge_num, sizeof(GraphAdj_edge), _graphAdj_cmp, NULL);
     auto_ptr(List) degrees = list_new(size);
 
-    size_t edge_num = this->edge_num;
-    GraphAdj_edge *const edges = (GraphAdj_edge *)calloc(edge_num, sizeof(GraphAdj_edge));
-
-    if(tree == NULL || heap == NULL || degrees == NULL || edges == NULL){
+    if(unlikely(tree == NULL || heap == NULL || degrees == NULL)){
         return NULL;
     }
 
     /* init edges */
-    GraphAdj_edge *start = edges;
+    printf("init edges\n");
     for(size_t i = 0; i < size; i++){
         for(size_t j = i + 1; j < size; j++){
             double weight = matrix_get(adj, i, j).num_float64;
             if(GRAPHADJ_ISLINK(weight)){
-                *start = (GraphAdj_edge){.from = i, .to = j, .weight = weight};
-                start ++;
+                heap_append(heap, tmp_mptr(((GraphAdj_edge){.from = i, .to = j, .weight = weight})));
             }
         }
     }
-
-    /* init heap */
-    heap_initFromStart(heap, edges, sizeof(GraphAdj_edge), edge_num);
-
+#if GRAPHADJ_PRIM_DEBUG
+    printf("heap_size: %ld\n", heap_size);
+#endif
     /* init tree */
     size_t new_edge_num = 0;
     while(new_edge_num < size - 1){
-        GraphAdj_edge *edge = heap_pop(heap).ptr;
-        size_t from = edge->from, to = edge->to;
+        auto_ptr(Monad) edge = heap_pop(heap);
+        GraphAdj_edge *edge_ptr = (GraphAdj_edge *)edge->data;
+        size_t from = edge_ptr->from, to = edge_ptr->to;
+        double weight = edge_ptr->weight;
         int union_result = ufsTree_union(tree, from, to);
-
         if(union_result == 3){
             /* already union before */
             continue;
         }
-
-        double weight = edge->weight;
         new_edge_num ++;
         list_set(degrees, from, (Elem){list_get(degrees, from).num_int64 + 1});
         list_set(degrees, to, (Elem){list_get(degrees, to).num_int64 + 1});
@@ -567,7 +561,5 @@ __malloc  GraphAdj * graphAdj_Kruskal(GraphAdj const*const this){
     }
     new->degree = max_degree;
 
-    /* free edges */
-    free(edges);
     return new;
 }

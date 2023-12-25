@@ -6,7 +6,7 @@
 #include "../include/huffman.h"
 
 
-void _huffman_delete(HuffmanNode * const node){
+void _huffman_delete(HuffmanNode *node){
     if(node == NULL){
         return;
     }
@@ -15,102 +15,79 @@ void _huffman_delete(HuffmanNode * const node){
     free(node);
 }
 
-void huffman_delete(HuffmanTree * const this){
+void huffman_delete(HuffmanTree *this){
     _huffman_delete(this->root);
     free(this);
 }
 
-int huffman_cmp(Elem const e0, Elem const e1){
-    HuffmanNode *node0 = (HuffmanNode *)e0.ptr;
-    HuffmanNode *node1 = (HuffmanNode *)e1.ptr;
-    return node0->weight < node1->weight;
+int huffman_cmp(Block const*const block, size_t index0, size_t index1){
+    HuffmanNode *node0 = read_mptr(HuffmanNode *, block_get(block, index0));
+    HuffmanNode *node1 = read_mptr(HuffmanNode *, block_get(block, index1));
+    return node1->weight - node0->weight;
 }
 
 #define NEW_DEBUG 0
 HuffmanTree* huffman_new(
-        Elem const * const list,
+        char const * const list,
         double const * const weight,
         long unsigned const length){
-    HuffmanTree *this = (HuffmanTree *)malloc(sizeof(HuffmanTree));
-    if(this == NULL){
+    HuffmanTree *new = (HuffmanTree *)malloc(sizeof(HuffmanTree));
+    if(new == NULL){
         return NULL;
     }
-    this->root = NULL;
-    HuffmanNode **node_list = (HuffmanNode **)malloc(sizeof(HuffmanNode *) * length);
+    new->root = NULL;
+    auto_ptr(Heap) heap = heap_new(length, sizeof(HuffmanNode *), huffman_cmp, NULL);
+    if(heap == NULL){
+        goto fail0;
+    }
 
     for(long unsigned i = 0; i < length; i++){
-#if NEW_DEBUG
-        printf("malloc node %ld\n", i);
-#endif
-        /* malloc all leaf nodes */
-        HuffmanNode *node = (HuffmanNode *)malloc(sizeof(HuffmanNode));
-
-        if(node == NULL){
+        HuffmanNode *tmp = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+        if(tmp == NULL){
             goto fail1;
         }
-        node_list[i] = node;
-        node->data = list[i];
-#if NEW_DEBUG
-        printf("node data %ld\n", list[i].num_int64);
-#endif
-        node->weight = weight[i];
-        node->left = NULL;
-        node->right = NULL;
-        node->is_leaf = 1;
+        heap_append(heap, tmp_mptr(tmp));
 #if NEW_DEBUG
         printf("\n");
 #endif
     }
 
-    Heap *heap = heap_new(length, huffman_cmp);
-    /* heap of HuffmanNode */
-    if(heap == NULL){
-        goto fail1;
-    }
-
-    heap_initFromList(heap, (Elem *)node_list, length);
     while(heap->size > 1){
         /* malloc a new non leaf node */
         HuffmanNode *node = (HuffmanNode *)malloc(sizeof(HuffmanNode));
         if(node == NULL){
-            goto fail2;
+            goto fail1;
         }
         node->is_leaf = 0;
 
-        HuffmanNode *left = (HuffmanNode *)heap_pop(heap).ptr;
-        HuffmanNode *right = (HuffmanNode *)heap_pop(heap).ptr;
+        HuffmanNode *left = read_mptr(HuffmanNode *, heap_pop(heap));
+        HuffmanNode *right = read_mptr(HuffmanNode *, heap_pop(heap));
         node->left = left;
         node->right = right;
 #if NEW_DEBUG
         printf("left %ld\n", left);
         printf("right %ld\n", right);
 #endif
-        node->data = (Elem)(long)0;
+        node->data = 0;
         node->weight = left->weight + right->weight;
-        heap_append(heap, (Elem)(void *)node);
+        heap_append(heap, tmp_mptr(node));
     }
-    HuffmanNode *root = (HuffmanNode *)heap_pop(heap).ptr;
-    this->root = root;
-    heap_delete(heap);
-    return this;
+    HuffmanNode *root = read_mptr(HuffmanNode *, heap_pop(heap));
+    new->root = root;
+
+    return new;
 
     /* Hierarchical memory free */
-    fail2:;
-    long unsigned size = heap->size;
-    while(size > 0){
-        HuffmanNode *node = (HuffmanNode *)heap_pop(heap).ptr;
-        _huffman_delete(node);
-        size--;
-    }
-    heap_delete(heap);
     fail1:;
     /* free all malloced memory */
-    for(long unsigned j = 0; j < length; j++){
-        if(node_list == NULL) break;
-        free(node_list[j]);
+    Block *block = heap->data;
+    size_t size = heap->size;
+    for(long unsigned i = 0; i < size; i++){
+        HuffmanNode *tmp = read_mptr(HuffmanNode *, block_get(block, i));
+        _huffman_delete(tmp);
     }
-    free(node_list);
-    free(this);
+    fail0:;
+    free(new);
     return NULL;
 }
 
@@ -123,7 +100,7 @@ void _huffman_display(HuffmanNode const * const node, int depth){
     }
     printf("- ");
     if(node->is_leaf)
-        printf("%c %lf\n", node->data.str, node->weight);
+        printf("%c %lf\n", node->data, node->weight);
     else{
         printf("%lf\n", node->weight);
     }

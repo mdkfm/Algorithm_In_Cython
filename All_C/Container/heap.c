@@ -6,9 +6,11 @@
 
 #define HEAP_DEBUG 0
 
+#define HEAP_ROOT 1
+#define HEAP_FREE 0
 
 __receive __malloc Heap*const
-heap_new(size_t const mem_num, size_t const mem_size, Heap_cmp cmp){
+heap_new(size_t mem_num, size_t mem_size, Heap_cmp cmp, Heap_display display){
     if(cmp == NULL){
         return NULL;
     }
@@ -17,8 +19,8 @@ heap_new(size_t const mem_num, size_t const mem_size, Heap_cmp cmp){
     if(this == NULL){
         return NULL;
     }
-    /* The first node is 0 */
-    Block *data = block_new(mem_num, mem_size);
+    /* The first node is 1 */
+    Block *data = block_new(mem_num + 1, mem_size);
     if(data == NULL){
         free(this);
         return NULL;
@@ -27,13 +29,14 @@ heap_new(size_t const mem_num, size_t const mem_size, Heap_cmp cmp){
     this->size = 0;
     this->maxsize = mem_num;
     this->cmp = cmp;
+    this->display = display;
     return this;
 }
 
-void heap_heapifyFrom(Heap * const this, size_t const start){
+void heap_heapifyFrom(Heap * const this, size_t start){
     /* heapify the heap from start */
     Block *const list = this->data;
-    size_t const length = this->size;
+    size_t const end = heap_LAST(this);
     Heap_cmp cmp = this->cmp;
 
     size_t node = start;
@@ -44,8 +47,8 @@ void heap_heapifyFrom(Heap * const this, size_t const start){
 
         /* use cmv instead if */
         /* get the max between key, left and right */
-        size_t l = heap_LEFT(node) < length ? heap_LEFT(node) : node;
-        size_t r = heap_RIGHT(node) < length ? heap_RIGHT(node) : node;
+        size_t l = heap_LEFT(node) <= end ? heap_LEFT(node) : node;
+        size_t r = heap_RIGHT(node) <= end ? heap_RIGHT(node) : node;
 
         index = cmp(this->data, l, index) > 0 ? l : index;
         index = cmp(this->data, r, index) > 0 ? r : index;
@@ -63,37 +66,39 @@ void heap_heapifyFrom(Heap * const this, size_t const start){
 }
 
 void heap_heapify(Heap * const this){
-    size_t length = this->size;
-    for(size_t i = length / 2; i > 0 ; i--){
-        heap_heapifyFrom(this, i - 1);
+    /* heapify the heap */
+    long end = HEAP_ROOT;
+    for(long i = heap_LAST_PARENT(this); i >= end; i--){
+        heap_heapifyFrom(this, i);
 #if HEAP_DEBUG
         heap_display(this);
 #endif
     }
 }
 
-void heap_display(Heap const * const this, void (*display)(void const*const)){
+void heap_display(Heap const * const this){
     if(unlikely(heap_isEmpty(this))){
         printf("Empty heap\n");
         return;
     }
 
-    size_t length = heap_size(this);
     Block* const list = this->data;
+    Heap_display display = this->display;
     printf("Heap: ");
-    for (size_t i = 0; i < length; ++i) {
+    size_t end = heap_LAST(this);
+    for (size_t i = HEAP_ROOT; i <= end; ++i) {
         display(block_getPtr(list, i));
         printf(" ");
     }
     printf("\n");
 }
 
-int heap_init(Heap * const this, void * const list, size_t const length){
+int heap_init(Heap * const this, void * const list, size_t length){
     if(length > this->maxsize){
         return -1;
     }
 
-    block_write(this->data, 0, length, list);
+    block_write(this->data, HEAP_ROOT, length, list);
     this->size = length;
 
     heap_heapify(this);
@@ -111,7 +116,7 @@ Monad *heap_top(Heap const * const this){
     if(unlikely(heap_isEmpty(this))){
         raise_error("Heap is empty", __FILE__, __func__, __LINE__);
     }
-    Monad *top = monad_new(this->data->mem_size, block_getPtr(this->data, 0));
+    Monad *top = monad_new(this->data->mem_size, block_getPtr(this->data, HEAP_ROOT));
     return top;
 }
 
@@ -121,18 +126,33 @@ Monad *heap_pop(Heap * const this){
     }
 
     Block * const list = this->data;
-    size_t length = this->size;
 
     /* get the top element */
-    Monad *result = monad_new(list->mem_size, block_getPtr(list, 0));
+    Monad *result = monad_new(list->mem_size, block_getPtr(list, HEAP_ROOT));
 
-    /* move the last element to the top
-     * and heapify the heap*/
-    block_write(list, 0, 1, block_getPtr(list, --length));
-    this->size = length;
-    heap_heapifyFrom(this, 0);
+    /* move the last element to the top */
+    block_write(list, HEAP_ROOT, 1, block_getPtr(list, heap_LAST(this)));
+    this->size --;
 
+    /* heapify the heap */
+    heap_heapifyFrom(this, HEAP_ROOT);
     return result;
+}
+
+void heap_float(Heap *const this, size_t index){
+    /* float from index to the top */
+    /* the element should be at HEAP_FREE */
+    Block * const list = this->data;
+    Heap_cmp cmp = this->cmp;
+
+    size_t i = index, parent = heap_PARENT(index);
+    while(index > HEAP_ROOT && cmp(this->data, parent, HEAP_FREE) < 0){
+        /* from bottom to top, time complexity O(lg(n)) */
+        block_write(list, i, 1, block_getPtr(list, parent));
+        i = parent;
+        parent = heap_PARENT(i);
+    }
+    block_write(list, i, 1, block_getPtr(list, HEAP_FREE));
 }
 
 int heap_append(Heap * const this, Monad const*const key){
@@ -141,47 +161,29 @@ int heap_append(Heap * const this, Monad const*const key){
     if(unlikely(heap_isFull(this))){
         return -1;
     }
-    size_t index = this->size;
-    this->size = index + 1;
+    this->size++;
 
     Block * const list = this->data;
-    block_set(list, index, key);
+    /* write it to the free space */
+    block_set(list, HEAP_FREE, key);
 
-    Heap_cmp cmp = this->cmp;
-
-    size_t parent = heap_PARENT(index);
-    while(index != 0 && cmp(this, parent, index) < 0){
-        /* from bottom to top, time complexity O(lg(n)) */
-        block_write(list, index, 1, block_getPtr(list, parent));
-        index = parent;
-        parent = heap_PARENT(index);
-    }
-    block_set(list, index, key);
+    /* float it to the top */
+    heap_float(this, heap_LAST(this));
     return 0;
 }
 
-int heap_increase(Heap * const this, size_t const index, Monad const*const key){
+int heap_increase(Heap * const this, size_t index, Monad const*const key){
+    /* index from 1 to size */
     /* increase the index element to key */
 
     /* similar with heap_insert */
-
     if(index >= this->size){
         return 0;
     }
-    Elem * const list = this->data;
-    int (*cmp)(Elem const, Elem const) = this->cmp;
-    if(cmp(list[index], key) > 0){
-        return 0;
-    }
-    list[index] = key;
-    size_t i = index;
-    while(i != 0 && cmp(list[heap_PARENT(i)], key) < 0){
-         same as heap_insert
+    Block * const list = this->data;
+    block_set(list, HEAP_FREE, key);
 
-        size_t parent = heap_PARENT(i);
-        list[i] = list[parent];
-        i = parent;
-    }
-    list[i] = key;
+    /* float it to the top */
+    heap_float(this, index);
     return 1;
 }

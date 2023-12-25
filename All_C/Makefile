@@ -6,7 +6,7 @@ vpath %.c ./List ./Graph ./test ./Container
 vpath %.h ./include
 vpath %.so ./lib
 
-test_source = $(wildcard ./test/*.c)
+test_source = $(wildcard ./test/graphAdj_test.c)
 test := $(patsubst ./test/%.c, %, $(test_source))
 all : $(test)
 

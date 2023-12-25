@@ -17,6 +17,7 @@
 #define tmp_pptr(x) tmp_ptr(tmp_ptr(x))
 #define tmp_monad(x) (Monad){.data = tmp_ptr(x), .mem_size = sizeof(x), .shared_num = 1}
 #define tmp_mptr(x) tmp_ptr(tmp_monad(x))
+#define read_mptr(type, x) (*(type *)x->data)
 
 typedef struct Block{
     void * data;
@@ -41,22 +42,22 @@ Class(Monad)
 __malloc Block *const block_new(size_t const mem_num, size_t const mem_size);
 void block_delete(Block * this);
 void block_share(Block *const this, Block **that);
-Monad *block_get(Block *const this, size_t const index);
-void block_set(Block *const this, size_t const index, Monad *const monad);
+Monad *block_get(Block const*const this, size_t const index);
+void block_set(Block *const this, size_t const index, Monad const*const monad);
 int block_read(Block *const this, size_t const index, size_t const num, void *const buf);
-int block_write(Block *const this, size_t const index, size_t const num, void *const buf);
+int block_write(Block *const this, size_t const index, size_t const num, void const*const buf);
 
 
 /* monad_new create a new monad in HEAP */
 /* tmp_mptr create a new monad in STACK */
 __malloc Monad *const monad_new(size_t const mem_size, void *const src);
 void monad_delete(Monad * this);
-void monad_share(Monad *const this, Monad ** that);
-void monad_set(Monad *const this, Monad *const that);
+void monad_share(Monad *const this, Monad **const that);
+void monad_set(Monad *const this, Monad const*const that);
 
 
 /* $Begin static inline */
-static inline void *block_getPtr(Block *const this, size_t const index){
+static inline void *block_getPtr(Block const*const this, size_t const index){
     if(unlikely(index >= this->mem_num)){
         /* index out of range */
         return NULL;
@@ -68,7 +69,7 @@ static inline size_t block_size(Block const *const this){
     return this->mem_num;
 }
 
-static inline size_t blcok_memSize(Block const *const this){
+static inline size_t block_memSize(Block const *const this){
     return this->mem_size;
 }
 
@@ -77,7 +78,6 @@ static inline void Block_raii(Block_class_ptr *ptr){
 }
 
 static inline void Monad_raii(Monad_class_ptr *ptr){
-    printf("Monad_raii\n");
     monad_delete(*ptr);
     *ptr = NULL;
 }

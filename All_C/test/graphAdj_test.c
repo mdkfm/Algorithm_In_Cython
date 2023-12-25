@@ -3,6 +3,10 @@
 //
 #include "../include/graphAdj.h"
 
+void display(void * data){
+    printf("%ld ", *(size_t *)data);
+}
+
 int main(){
     auto_ptr(GraphAdj) graph = graphAdj_new(9, 1, 0);
     double source[9][9] = {
@@ -19,7 +23,7 @@ int main(){
 
     graphAdj_initAdj(graph, source);
     printf("graphAdj_initAdj: \n");
-    auto_ptr(Deque) buf = deque_new(10);
+    auto_ptr(Deque) buf = deque_new(10, sizeof(size_t), display);
 
     graphAdj_DFS(graph, 0, buf);
     printf("DFS: ");
