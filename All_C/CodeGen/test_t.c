@@ -3,24 +3,26 @@
 //
 
 #include <stdio.h>
-#include "gnuc.h"
+#include "basic/gnuc.h"
 
 
-#define DType int
-#include "stack.h"
-#undef DType
+#define STACK_DType int
+#include "container/stack.h"
+#undef STACK_DType
 
 
-#define DType double
-#include "stack.h"
-#undef DType
+#define STACK_DType double
+#include "container/stack.h"
+#undef STACK_DType
 
 
-#define DType int
-#include "deque.h"
-#undef DType
+#define DEQUE_DType int
+#include "container/deque.h"
+#undef DEQUE_DType
 
-
+#define HEAP_DType double
+#include "container/heap.h"
+#undef HEAP_DType
 
 int main(){
     auto_ptr(Stack) stack = stackT(int).new(10, NULL);
@@ -30,10 +32,6 @@ int main(){
     stackT(int).append(stack, 4);
 
     stackT(int).display(stack);
-    printf("\n");
-    while(!stackT(int).isEmpty(stack)){
-        printf("%d ", stackT(int).pop(stack));
-    }
     printf("\n");
 
     auto_ptr(Stack) stack2 = stackT(double).new(10, NULL);
@@ -53,5 +51,14 @@ int main(){
     dequeT(int).appendLeft(deque, 4);
 
     dequeT(int).display(deque);
+    printf("\n");
+
+    auto_ptr(Heap) heap = heapT(double).new(10, NULL, NULL);
+    heapT(double).push(heap, 1.1);
+    heapT(double).push(heap, 2.2);
+    heapT(double).push(heap, 3.3);
+    heapT(double).push(heap, 4.4);
+
+    heapT(double).display(heap);
     return 0;
 }

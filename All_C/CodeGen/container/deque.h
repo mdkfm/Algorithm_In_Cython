@@ -1,11 +1,19 @@
 //
 // Created by skf on 24-1-6.
 //
+
+
+#ifndef DEQUE_DType
+#error No DEQUE_DType defined
+#else
+
 #include <stdlib.h>
 #include <stdio.h>
-#include "gnuc.h"
-#include "template.h"
-#include "error.h"
+
+#define DType DEQUE_DType
+#include "../basic/gnuc.h"
+#include "../basic/template.h"
+#include "../basic/error.h"
 
 #define TClass Deque
 #ifndef ALL_C_DEQUE_H
@@ -17,7 +25,7 @@ struct Deque{
     size_t front, rear;
     size_t maxsize;
     size_t size;
-    FPtr display;
+    FPtr_t display;
     DType *data;
 };
 
@@ -26,6 +34,10 @@ DPtr(Deque);
 void SF(delete)(Deque* this) {
     free(this->data);
     free(this);
+}
+
+static inline void SF(raii)(Ptr(Deque) * this) {
+    SF(delete)(*this);
 }
 
 void SF(clear)(Deque *const this) {
@@ -42,20 +54,12 @@ static inline int SF(isEmpty)(Deque const* this) {
     return this->size == 0;
 }
 
-static inline size_t SF(size)(Deque const* this) {
-    return this->size;
-}
-
 static inline size_t SF(freeSize)(Deque const* this) {
     return this->maxsize - this->size;
 }
 
-static inline void SF(raii)(Deque_class_ptr * this) {
-    SF(delete)(*this);
-}
-
 static inline size_t SF(realSize)(Deque const * const this){
-    return this->maxsize + 1;
+    return this->maxsize;
 }
 
 static inline size_t SF(leftEnd)(Deque const * const this){
@@ -86,7 +90,7 @@ F(new)(size_t maxsize, void (*display)(DType)){
     }
 
     new->data = data;
-    new->display =  display == NULL ? (FPtr)DISPLAY(DType) : (FPtr)display;
+    new->display =  display == NULL ? (FPtr_t)DISPLAY(DType) : (FPtr_t)display;
     new->maxsize = maxsize;
     new->size = 0;
     new->front = new->rear = 0;
@@ -106,7 +110,7 @@ void F(display)(Deque *this){
     // display
     printf("Left -> ");
     DType *data = this->data;
-    size_t first = SF(leftEnd)(this), size = SF(size)(this), realSize = SF(realSize)(this);
+    size_t first = SF(leftEnd)(this), size = this->size, realSize = SF(realSize)(this);
     for(size_t i = 0; i < size; i++){
         display(data[(first + i) % realSize]);
         printf(" -> ");
@@ -155,7 +159,6 @@ DType F(popRight)(Deque * this){
         // pop fail
         raise_error("The deque is empty", __FILE__, __func__, __LINE__);
     }
-    size_t realSize = SF(realSize)(this);
     size_t index = SF(rightEnd)(this);
     this->rear = index;
     this->size--;
@@ -188,12 +191,13 @@ DType F(getRight)(Deque const* this, size_t index){
     return data[index];
 }
 
-typedef struct F(Func_T) {
+typedef struct FuncT_t FuncT_t;
+
+struct FuncT_t {
     void (*delete)(Deque *this);
     void (*clear)(Deque *const this);
     int (*isFull)(Deque const *this);
     int (*isEmpty)(Deque const *this);
-    size_t (*size)(Deque const *this);
     size_t (*freeSize)(Deque const *this);
     Deque *const (*new)(size_t const maxsize, void (*display)(DType));
     int (*appendLeft)(Deque *const this, DType const elem);
@@ -203,14 +207,13 @@ typedef struct F(Func_T) {
     DType (*getLeft)(Deque const *const this, size_t const index);
     DType (*getRight)(Deque const *const this, size_t const index);
     void (*display)(Deque *const this);
-} F(FuncT);
+};
 
-static F(FuncT) const F(funcT) = {
+static FuncT_t const FuncT = {
         .delete = SF(delete),
         .clear = SF(clear),
         .isFull = SF(isFull),
         .isEmpty = SF(isEmpty),
-        .size = SF(size),
         .freeSize = SF(freeSize),
         .new = F(new),
         .appendLeft = F(appendLeft),
@@ -222,7 +225,9 @@ static F(FuncT) const F(funcT) = {
         .display = F(display),
 };
 
-#define Deque(T) CCAT(Deque, T)
-#define dequeT(T) Deque_##T##_funcT
+#define dequeT(T) classFuncT(Deque, T)
 
+#undef Class
 #undef TClass
+#undef DType
+#endif

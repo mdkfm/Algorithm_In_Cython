@@ -85,3 +85,7 @@ typedef struct Heap{
 - `write`: write the Elements of a list to the list according to slice.
 - `view`: view the Elements of a list according to slice.
 
+
+# Code generator
+The `CodeGen` directory uses a template based on macro to generate code.
+More refer to the `CodeGen/README.md`.

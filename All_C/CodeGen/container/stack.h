@@ -2,11 +2,16 @@
 // Created by skf on 24-1-6.
 //
 
-
+#ifndef STACK_DType
+#error No STACK_DType defined
+#else
 #include <stdlib.h>
-#include "gnuc.h"
-#include "template.h"
-#include "error.h"
+
+
+#define DType STACK_DType
+#include "../basic/gnuc.h"
+#include "../basic/template.h"
+#include "../basic/error.h"
 
 #define TClass Stack
 
@@ -18,7 +23,7 @@ typedef struct Stack Stack;
 struct Stack{
     size_t maxsize;
     size_t size;
-    void (*display)(void);
+    FPtr_t display;
     void * data;
 };
 
@@ -43,10 +48,6 @@ static inline int SF(isEmpty)(Stack const* this) {
     return this->size == 0;
 }
 
-static inline size_t SF(size)(Stack const* this) {
-    return this->size;
-}
-
 static inline size_t SF(freeSize)(Stack const* this) {
     return this->maxsize - this->size;
 }
@@ -65,8 +66,8 @@ F(new)(size_t const maxsize, void (*display)(DType)) {
     Stack *list = (Stack *) malloc(sizeof(Stack));
     list->maxsize = maxsize;
     list->size = 0;
-    list->display = display == NULL ? (FPtr)DISPLAY(DType) : (FPtr)display;
-    list->data = calloc(maxsize, sizeof(DType));
+    list->display = display == NULL ? (FPtr_t)DISPLAY(DType) : (FPtr_t)display;
+    list->data = malloc(maxsize * sizeof(DType));
     return list;
 }
 
@@ -85,9 +86,9 @@ int F(init)(Stack* this, DType const * src, size_t length) {
 
 DType F(get)(Stack const* this, size_t index, int reversed){
     size_t size = this->size;
-    if (unlikely(index > size)) {
+    if unlikely(index > size) {
         /* size out of range */
-        return -1;
+        raise_error("Index out of range", __FILE__, __func__, __LINE__);
     }
     size_t get_size = reversed ? size - index - 1 : index;
     DType *data = this->data;
@@ -95,9 +96,9 @@ DType F(get)(Stack const* this, size_t index, int reversed){
 }
 
 int F(append)(Stack* this, DType elem) {
-    if (unlikely(SF(isFull(this)))) {
+    if unlikely(SF(isFull(this))) {
         /* append fail */
-        return -1;
+        raise_error("Stack is full", __FILE__, __func__, __LINE__);
     }
     DType *data = this->data;
     data[this->size] = elem;
@@ -106,9 +107,9 @@ int F(append)(Stack* this, DType elem) {
 }
 
 DType F(pop)(Stack* this) {
-    if (unlikely(SF(isEmpty(this)))) {
+    if unlikely(SF(isEmpty(this))) {
         /* pop fail */
-        return -1;
+        raise_error("Stack is empty", __FILE__, __func__, __LINE__);
     }
     this->size--;
     DType *data = this->data;
@@ -136,12 +137,13 @@ void F(display)(Stack const* this) {
     printf("Top\n");
 }
 
-typedef struct F(FuncT){
+typedef struct FuncT_t FuncT_t;
+
+struct FuncT_t{
     void (*delete)(Stack* this);
     void (*clear)(Stack* const this);
     int (*isFull)(Stack const* this);
     int (*isEmpty)(Stack const* this);
-    size_t (*size)(Stack const* this);
     size_t (*freeSize)(Stack const* this);
     Stack*const (*new)(size_t const maxsize, void (*display)(DType));
     int (*init)(Stack *const this, DType const *const data, size_t const length);
@@ -149,14 +151,13 @@ typedef struct F(FuncT){
     int (*append)(Stack *const this, DType const elem);
     DType (*pop)(Stack *const this);
     void (*display)(Stack const *const this);
-} F(FuncT);
+};
 
-static F(FuncT) const F(funcT) = {
+static FuncT_t const F(funcT) = {
         .delete = SF(delete),
         .clear = SF(clear),
         .isFull = SF(isFull),
         .isEmpty = SF(isEmpty),
-        .size = SF(size),
         .freeSize = SF(freeSize),
         .new = F(new),
         .init = F(init),
@@ -166,8 +167,10 @@ static F(FuncT) const F(funcT) = {
         .display = F(display),
 };
 
-#define Stack(T) CCAT(Stack, T)
-#define stackT(T) Stack_##T##_funcT
+#define stackT(T) classFuncT(Stack, T)
 
 #undef TClass
 #undef Class
+#undef DType
+
+#endif //STACK_DType
